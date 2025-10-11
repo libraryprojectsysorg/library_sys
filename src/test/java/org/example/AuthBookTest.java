@@ -10,7 +10,7 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Unit tests for AuthBook (US1.3, US1.4).
@@ -19,17 +19,27 @@ import java.util.stream.Collectors;
  * @author Your Name
  * @version 1.0-SNAPSHOT
  */
+@ExtendWith(MockitoExtension.class)  // Extension for class-level mocks
 public class AuthBookTest {
     private AuthBook bookService;
+
+    // Fields for mocks (fixed: @Mock/@InjectMocks on fields, not locals)
+    @Mock
+    private List<Book> mockBooks;  // Mock the books list
+
+    @InjectMocks
+    private AuthBook mockService;  // Inject mock into service
 
     @BeforeEach
     public void setUp() {
         bookService = new AuthBook();
+        // Reset mocks if needed
+        reset(mockBooks);
     }
 
     @Test
     public void testAddBook() {
-        boolean added = bookService.addBook("Java Book", "Author1", "123456");  // Changed to check return
+        boolean added = bookService.addBook("Java Book", "Author1", "123456");  // Check return
         assertTrue(added);
         List<Book> results = bookService.searchBooks("Java");
         assertEquals(1, results.size());  // Searchable
@@ -39,7 +49,7 @@ public class AuthBookTest {
     @Test
     public void testAddDuplicateISBN() {
         bookService.addBook("Book1", "Auth", "111");
-        boolean added = bookService.addBook("Book2", "Auth", "111");  // Changed to check return
+        boolean added = bookService.addBook("Book2", "Auth", "111");  // Check return
         assertFalse(added);  // Fail without throw
     }
 
@@ -71,22 +81,34 @@ public class AuthBookTest {
     }
 
     @Test
-    public void testAddInvalidInput() {  // Covers throw branch in constructor
+    public void testAddInvalidInput() {  // Covers throw branch
         assertThrows(IllegalArgumentException.class, () -> bookService.addBook(null, "Author", "123"));
     }
 
-    // Mocking test with Mockito (prep for Sprint 3, covers stream branch)
-    @ExtendWith(MockitoExtension.class)
+    // Mocking test (fixed: uses class fields, covers stream branch)
     @Test
     public void testSearchWithMock() {  // Mock no match branch
-        @Mock List<Book> mockBooks;  // Mock the books list
-        @InjectMocks AuthBook mockService = new AuthBook() {  // Inject mock
-            { this.books = mockBooks; }
-        };
-
-        when(mockBooks.stream()).thenReturn(java.util.stream.Stream.<Book>empty());  // Mock empty stream
+        when(mockBooks.stream()).thenReturn(Stream.<Book>empty());  // Mock empty stream (inferred type OK)
         List<Book> results = mockService.searchBooks("query");
         assertTrue(results.isEmpty());  // No match
         verify(mockBooks).stream();  // Verify filter call
+    }
+    @Test
+    public void testAddBookDuplicateFalseBranch() {  // Covers false in anyMatch
+        bookService.addBook("Book1", "Auth", "111");
+        boolean added = bookService.addBook("Book2", "Auth", "111");
+        assertFalse(added);  // False branch
+    }
+
+    @Test
+    public void testSearchNoMatchFullStream() {  // Covers false in all filter conditions
+        bookService.addBook("Java Book", "Author", "123");
+        List<Book> results = bookService.searchBooks("Python");  // No match in title/author/isbn
+        assertTrue(results.isEmpty());  // Full false path in stream
+    }
+
+    @Test
+    public void testAddBookEmptyTitle() {  // Covers throw in if null/empty
+        assertThrows(IllegalArgumentException.class, () -> bookService.addBook("", "Author", "123"));
     }
 }
