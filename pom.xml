@@ -148,19 +148,11 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.6.0</version>
                 <configuration>
-                    <mainClass>org.example.Main</mainClass>
+                    <mainClass>org.library.Main</mainClass>
                 </configuration>
             </plugin>
 
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.13.0</version>
-                <configuration>
-                    <release>17</release>
-                    <encoding>UTF-8</encoding>
-                </configuration>
-            </plugin>
+
         </plugins>
     </build>
 </project>

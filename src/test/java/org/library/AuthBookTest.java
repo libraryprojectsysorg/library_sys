@@ -1,8 +1,11 @@
-package org.example;
+package org.library;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.library.Domain.Book;
+import org.library.Domain.Media;
+import org.library.Service.Strategy.BookService;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -21,18 +24,18 @@ import java.util.stream.Stream;
  */
 @ExtendWith(MockitoExtension.class)  // Extension for class-level mocks
 public class AuthBookTest {
-    private AuthBook bookService;
+    private BookService bookService;
 
     // Fields for mocks (fixed: @Mock/@InjectMocks on fields, not locals)
     @Mock
     private List<Book> mockBooks;  // Mock the books list
 
     @InjectMocks
-    private AuthBook mockService;  // Inject mock into service
+    private BookService mockService;  // Inject mock into service
 
     @BeforeEach
     public void setUp() {
-        bookService = new AuthBook();
+        bookService = new BookService();
         // Reset mocks if needed
         reset(mockBooks);
     }
@@ -110,5 +113,18 @@ public class AuthBookTest {
     @Test
     public void testAddBookEmptyTitle() {  // Covers throw in if null/empty
         assertThrows(IllegalArgumentException.class, () -> bookService.addBook("", "Author", "123"));
+    }
+    @Test
+    void testMediaGetters() {
+        Media book = new Book("Title", "Author", "123");
+        assertEquals("Title", book.getTitle());  // Getter branch
+        assertEquals("Author", book.getAuthor());
+        assertEquals("123", book.getIsbn());
+    }
+
+    @Test
+    void testMediaConstructorInvalid() {
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> new Book(null, "Author", "123"));
+        assertTrue(ex.getMessage().contains("Invalid media details"));
     }
 }

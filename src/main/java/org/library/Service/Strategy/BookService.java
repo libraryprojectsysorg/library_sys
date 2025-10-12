@@ -1,4 +1,6 @@
-package org.example;
+package org.library.Service.Strategy;
+
+import org.library.Domain.Book;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -11,13 +13,13 @@ import java.util.stream.Collectors;
  * @author Your Name
  * @version 1.0-SNAPSHOT
  */
-public class AuthBook {
+public class BookService {
     private List<Book> books;
 
     /**
      * Default constructor with empty book list.
      */
-    public AuthBook() {
+    public BookService() {
         this.books = new ArrayList<>();  // Default for normal use
     }
 
@@ -26,7 +28,7 @@ public class AuthBook {
      *
      * @param books the list of books to use (for mocking)
      */
-    public AuthBook(List<Book> books) {
+    public BookService(List<Book> books) {
         this.books = books;  // For Mockito inject
     }
 
