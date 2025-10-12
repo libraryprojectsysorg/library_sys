@@ -111,4 +111,17 @@ public class AuthBookTest {
     public void testAddBookEmptyTitle() {  // Covers throw in if null/empty
         assertThrows(IllegalArgumentException.class, () -> bookService.addBook("", "Author", "123"));
     }
+    @Test
+    void testMediaGetters() {
+        Media book = new Book("Title", "Author", "123");
+        assertEquals("Title", book.getTitle());  // Getter branch
+        assertEquals("Author", book.getAuthor());
+        assertEquals("123", book.getIsbn());
+    }
+
+    @Test
+    void testMediaConstructorInvalid() {
+        IllegalArgumentException ex = assertThrows(IllegalArgumentException.class, () -> new Book(null, "Author", "123"));
+        assertTrue(ex.getMessage().contains("Invalid media details"));
+    }
 }

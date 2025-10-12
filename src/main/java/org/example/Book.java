@@ -1,42 +1,39 @@
 package org.example;
 
+import java.util.Objects;
 
-public class Book {
-    private String title;
-    private String author;
-    private String isbn;
-    private boolean available = true;
-
-
+/**
+ * Entity for book (Sprint 1 & 5: extends Media for polymorphism).
+ * @author YourName
+ * @version 1.0
+ */
+public class Book extends Media {  // Extend Media for Sprint 5 polymorphism
+    /**
+     * Constructor for Book (US1.3).
+     * @param title the book title
+     * @param author the book author
+     * @param isbn the ISBN
+     * @throws IllegalArgumentException if invalid details
+     */
     public Book(String title, String author, String isbn) {
-        if (title == null || author == null || isbn == null || title.isEmpty() || author.isEmpty() || isbn.isEmpty()) {
-            throw new IllegalArgumentException("Invalid book details: title, author, or ISBN cannot be null or empty");  // Branch for validation
-        }
-        this.title = title;
-        this.author = author;
-        this.isbn = isbn;
+        super(title, author, isbn);  // Call super (Media constructor)
     }
 
+    /**
+     * Loan days for book (US5.1 polymorphism).
+     * @return 28 days
+     */
+    @Override
+    public int getLoanDays() {
+        return 28;  // Book: +28 days
+    }
 
-    public String getTitle() { return title; }
-
-
-    public void setTitle(String title) { this.title = title; }
-
-
-    public String getAuthor() { return author; }
-
-
-    public void setAuthor(String author) { this.author = author; }
-
-    public String getIsbn() { return isbn; }
-
-
-    public void setIsbn(String isbn) { this.isbn = isbn; }
-
-
-    public boolean isAvailable() { return available; }
-
-
-    public void setAvailable(boolean available) { this.available = available; }
+    /**
+     * Fine strategy for book (US5.2 Strategy Pattern).
+     * @return BookFineStrategy
+     */
+    @Override
+    public FineStrategy getFineStrategy() {
+        return new BookFineStrategy();  // 10 NIS/day
+    }
 }

@@ -1,0 +1,16 @@
+package org.example;
+
+/**
+ * Strategy for fine calculation (Sprint 5).
+ * @author YourName
+ * @version 1.0
+ */
+public interface FineStrategy {
+    /**
+     * Calculate fine.
+     * @param overdueDays days overdue
+     * @return NIS amount
+     */
+    int calculateFine(int overdueDays);
+}
+

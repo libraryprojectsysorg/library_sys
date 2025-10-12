@@ -3,36 +3,37 @@ package org.example;
 import java.time.LocalDate;
 
 /**
- * Domain entity for Loan (US2.1).
- * Represents a borrowed book with due date.
- *
- * @author Your Name
- * @version 1.0-SNAPSHOT
+ * Entity for a media loan (US2.1, Sprint 5: polymorphism for book/CD).
+ * @author YourName
+ * @version 1.0
  */
 public class Loan {
-    private Book book;
-    private LocalDate dueDate;
+    private final String loanId;
+    private final Media media;  // Polymorphism: Book or CD (remove Book field)
+    private final User user;
+    private final LocalDate borrowDate;
+    private final LocalDate dueDate;
 
     /**
-     * Constructs a Loan.
-     *
-     * @param book the borrowed book
-     * @param dueDate the due date
+     * Constructor for Loan.
+     * @param loanId unique loan ID
+     * @param media the borrowed media (Book or CD)
+     * @param user the borrowing user
+     * @param borrowDate when borrowed
+     * @param dueDate due date (+loan days)
      */
-    public Loan(Book book, LocalDate dueDate) {
-        this.book = book;
+    public Loan(String loanId, Media media, User user, LocalDate borrowDate, LocalDate dueDate) {
+        this.loanId = loanId;
+        this.media = media;
+        this.user = user;
+        this.borrowDate = borrowDate;
         this.dueDate = dueDate;
     }
 
-    /**
-     * Gets the borrowed book.
-     * @return the book
-     */
-    public Book getBook() { return book; }
-
-    /**
-     * Gets the due date.
-     * @return the due date
-     */
+    // Getters (no isOverdue() - moved to service)
+    public String getLoanId() { return loanId; }
+    public Media getMedia() { return media; }  // For polymorphism (US5.1)
+    public User getUser() { return user; }
+    public LocalDate getBorrowDate() { return borrowDate; }
     public LocalDate getDueDate() { return dueDate; }
 }
