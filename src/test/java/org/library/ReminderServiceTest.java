@@ -1,16 +1,14 @@
 package org.library;
-
-import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 import org.library.Service.Strategy.BorrowService;
 import org.library.Service.Strategy.EmailNotifier;
 import org.library.Service.Strategy.EmailServer;
-import org.library.Service.Strategy.ReminderService;
 import org.library.Domain.User;
+import org.library.Service.Strategy.ReminderService;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import static org.mockito.Mockito.*;
-
 import java.util.List;
 
 /**
