@@ -23,9 +23,9 @@ public class EmailNotifier implements Observer {
     }
 
     /**
-     * إرسال إشعار للمستخدم.
-     * @param user المستخدم المراد إرسال الإشعار له.
-     * @param message محتوى الرسالة.
+
+     * @param user .
+     * @param message .
      */
     @Override
     public void notify(User user, String message) {

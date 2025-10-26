@@ -1,7 +1,7 @@
-package org.library.Domain; // تم توحيد الحزمة إلى الأحرف الصغيرة
+package org.library.Domain;
 
-import org.library.Service.Strategy.fines.CDFineStrategy; // تصحيح الحزمة
-import org.library.Service.Strategy.fines.FineStrategy; // تصحيح الحزمة
+import org.library.Service.Strategy.fines.CDFineStrategy;
+import org.library.Service.Strategy.fines.FineStrategy;
 
 /**
 

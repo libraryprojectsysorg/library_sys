@@ -38,7 +38,7 @@ public class OverdueReport {
 
     @Override
     public int hashCode() {
-        // يتم حساب الهاش كود بناءً على الحقلين
+
         return Objects.hash(user, overdueBooksCount);
     }
 }
