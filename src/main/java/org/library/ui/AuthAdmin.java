@@ -36,13 +36,13 @@ public class AuthAdmin {
      * @param fineCalculator خدمة حساب الغرامات الإجمالية.
      */
     public AuthAdmin(BorrowService borrowService, ReminderService reminderService, FineCalculator fineCalculator) {
-        // تهيئة قائمة الـ Admins
+
         admins.add(new Admin("s12217663@stu.najah.edu", "ws1234"));
 
-        // Demo user for testing (Sprint 4+)
+
         users.add(new User("U001", "Demo User", "demo@example.com"));
 
-        // حقن الخدمات
+
         this.borrowService = borrowService;
         this.reminderService = reminderService;
         this.fineCalculator = fineCalculator;

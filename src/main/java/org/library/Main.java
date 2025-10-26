@@ -44,7 +44,7 @@ public class Main {
 
         setupDemoData(borrowService);
 
-        System.out.println("=== Library Management System (Phase 1) ===");
+        System.out.println("=== Library Management System  ===");
 
 
         boolean loggedIn = false;

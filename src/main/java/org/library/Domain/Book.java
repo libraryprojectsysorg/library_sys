@@ -35,7 +35,8 @@ public class Book extends Media {  // Extend Media for Sprint 5 polymorphism
      * @return BookFineStrategy
      */
     @Override
-    public FineStrategy getFineStrategy() {
+    public FineStrategy getFineStrategy()
+    {
         return new BookFineStrategy();  // 10 NIS/day
     }
 }

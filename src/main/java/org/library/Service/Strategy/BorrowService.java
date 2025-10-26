@@ -3,7 +3,7 @@ package org.library.Service.Strategy;
 import org.library.Domain.Loan;
 import org.library.Domain.Media;
 import org.library.Domain.User;
-import org.library.Service.Strategy.EmailNotifier; // (يجب إنشاء هذا الكلاس)
+import org.library.Domain.Fine;
 
 import java.time.Clock;
 import java.time.LocalDate;
@@ -13,16 +13,17 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * خدمة منطق الأعمال لإدارة الإعارات ومنطق التأخير (Service Layer).
+
  * يدعم محاكاة الوقت، قيود الإعارة، تعدد الأشكال، ويدمج نمط الملاحظ (Observer).
  *
- * @author YourName
+ * @author Weam Ahmad
+ * @author  Seba Abd Aljwwad
  * @version 1.2
  */
 public class BorrowService {
 
     private Clock clock = Clock.systemDefaultZone();
-    private final List<Loan> loans = new ArrayList<>(); // تم تغيير مستوى الوصول إلى private/final ليتوافق مع DI
+    private final List<Loan> loans = new ArrayList<>();
 
     /** كائن الملاحظ (Observer) لإرسال الإشعارات عند التأخير. */
     private final EmailNotifier emailNotifier;
@@ -42,13 +43,13 @@ public class BorrowService {
      * منشئ افتراضي يُستخدم في حال عدم وجود نظام حقن تبعيات. (يفضل حذفه في مشروع DI كامل)
      */
     public BorrowService() {
-        // يمكنك إزالة هذا Constructor إذا كنت تستخدم DI في جميع الأماكن
-        this.emailNotifier = null; // سيؤدي إلى NullPointerException إذا استخدمت sendReminders()
+
+        this.emailNotifier = null;
     }
 
     /**
-     * تعيين كائن ساعة وهمي (Mock Clock) لاستخدامه في الاختبارات.
-     * @param clock الساعة الوهمية المراد استخدامها.
+     * (Mock Clock)
+     * @param clock .
      */
     public void setClock(Clock clock) {
         this.clock = clock;
@@ -59,22 +60,21 @@ public class BorrowService {
     }
 
     /**
-     * استرجاع قائمة بجميع الإعارات النشطة حالياً. (للاختبارات)
      * @return قائمة الإعارات (List<Loan>).
      */
     public List<Loan> getLoans() {
         return loans;
     }
 
-    // --- Core Business Logic ---
+
 
     /**
-     * اقتراض وسيط للمستخدم (US2.1, US5.1).
+
      *
-     * @param media الوسيط المراد اقتراضه.
-     * @param user المستخدم الذي يقوم بالاقتراض.
-     * @return كائن الإعارة الجديد (Loan).
-     * @throws RuntimeException إذا كان الوسيط غير متوفر أو تنطبق قيود الإعارة (US4.1).
+     * @param media .
+     * @param user .
+     * @return .
+     * @throws RuntimeException .
      */
     public Loan borrowMedia(Media media, User user) {
         if (!media.isAvailable()) {
@@ -93,32 +93,39 @@ public class BorrowService {
         return loan;
     }
 
+
+
     /**
-     * إرجاع وسيط مُعار (Media Return). (وظيفة جديدة مضافة)
+     * (Media Return).
      *
-     * @param loan الإعارة المراد إغلاقها.
-     * @return قيمة الغرامة المستحقة على هذه الإعارة (0 إذا لم يكن هناك تأخير).
-     * @throws IllegalArgumentException إذا كانت الإعارة غير موجودة.
+     * @param loan .
+     * @return .
+     * @throws IllegalArgumentException .
      */
     public int returnMedia(Loan loan) {
         if (!loans.contains(loan)) {
             throw new IllegalArgumentException("Loan not found in active loans.");
         }
 
-        int fine = calculateFineForLoan(loan);
+        int fineAmount = calculateFineForLoan(loan);
 
         loans.remove(loan);
         loan.getMedia().setAvailable(true);
 
-        // هنا يجب تسجيل الغرامة على المستخدم (افتراضياً)
-        if (fine > 0) {
-            // user.addFine(fine);
+
+        if (fineAmount > 0) {
+
+            User user = loan.getUser();
+            Fine newFine = new Fine(fineAmount);
+            user.addFine(newFine);
+            return fineAmount;
         }
 
-        return fine;
+
+        return 0;
     }
 
-    // --- Fine Calculation & Reporting (US5.2, US5.3) ---
+
 
     /**
      * حساب الغرامة المستحقة على إعارة معينة (US5.2: Strategy integration).
@@ -168,7 +175,7 @@ public class BorrowService {
     }
 
 
-    // --- Helper Methods ---
+
 
     /**
      * Check if a loan is overdue (US2.2).

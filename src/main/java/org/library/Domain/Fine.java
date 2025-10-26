@@ -27,7 +27,8 @@ public class Fine {
      * Mark as paid (US2.3 partial/full).
      * @param paid true if paid
      */
-    public void setPaid(boolean paid) { this.paid = paid; }
+    public void setPaid(boolean paid)
+    { this.paid = paid; }
 
     @Override
     public boolean equals(Object o) {

@@ -2,6 +2,13 @@ package org.library;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.library.Domain.Book;
+import org.library.Domain.CD;
+import org.library.Domain.Loan;
+import org.library.Domain.User;
+import org.library.Service.Strategy.BorrowService;
+import org.library.Service.Strategy.fines.FineCalculator;
+import org.library.Service.Strategy.fines.FineStrategy;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import static org.mockito.ArgumentMatchers.any;  // إضافة لـ any(Loan.class)

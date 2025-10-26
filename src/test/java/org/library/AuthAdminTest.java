@@ -6,9 +6,9 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.library.Domain.Loan;
 import org.library.Domain.User;
-import org.library.Service.Strategy.BorrowService; // (2) استخدام الحزمة الصحيحة
-import org.library.Service.Strategy.fines.FineCalculator; // (2) إضافة استيراد لخدمة FineCalculator
-import org.library.Service.Strategy.ReminderService; // (2) إضافة استيراد لخدمة ReminderService
+import org.library.Service.Strategy.BorrowService;
+import org.library.Service.Strategy.fines.FineCalculator;
+import org.library.Service.Strategy.ReminderService;
 import org.library.ui.AuthAdmin;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -33,7 +33,7 @@ public class AuthAdminTest {
     private ByteArrayInputStream inputStream;
     private PrintStream originalErr;
 
-    // (3) محاكاة جميع الخدمات التي يحتاجها AuthAdmin في Constructor
+
     @Mock
     private BorrowService mockBorrowService;
     @Mock
@@ -46,10 +46,10 @@ public class AuthAdminTest {
 
     @BeforeEach
     public void setUp() {
-        // (4) استخدام Constructor الجديد وحقن الخدمات المحاكاة
+
         authService = new AuthAdmin(mockBorrowService, mockReminderService, mockFineCalculator);
 
-        // (إعداد I/O كما كان في كودك الأصلي)
+
         originalOut = System.out;
         outputStream = new ByteArrayOutputStream();
         System.setOut(new PrintStream(outputStream));
@@ -65,7 +65,7 @@ public class AuthAdminTest {
         System.setIn(System.in);
     }
 
-    // --- Login/Logout Tests (كما كانت في كودك الأصلي) ---
+
 
     @Test
     public void testLoginSuccess() {
@@ -94,11 +94,11 @@ public class AuthAdminTest {
         assertFalse(result);
     }
 
-    // --- Menu Functionality Tests ---
+
 
     @Test
     public void testShowAdminMenuSendReminders() {
-        // اختبار case 1: التحقق من أن AuthAdmin يستدعي mockReminderService
+
 
         String input = "1\n2\n"; // 1 (Send Reminders), 2 (Logout)
         inputStream = new ByteArrayInputStream(input.getBytes());
@@ -111,9 +111,9 @@ public class AuthAdminTest {
         assertNotNull(output);
         assertTrue(output.contains("Reminders sent to overdue users!"));
 
-        // (التأكيد الرئيسي): يجب أن يتحقق من استدعاء خدمة التذكير المحقونة
+
         verify(mockReminderService).sendReminders();
-        // يجب ألا تتفاعل خدمات أخرى
+
         verifyNoInteractions(mockFineCalculator);
     }
 

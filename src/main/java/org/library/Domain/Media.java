@@ -28,7 +28,7 @@ public abstract class Media {
     }
 
     /**
-     * Loan days per type (US5.1).
+
      * @return days (e.g., 28 for book, 7 for CD)
      */
     public abstract int getLoanDays();
