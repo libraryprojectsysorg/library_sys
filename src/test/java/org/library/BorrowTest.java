@@ -4,9 +4,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.library.Domain.*;
 import org.library.Service.Strategy.BorrowService;
+import org.library.Service.Strategy.EmailNotifier;
 import org.library.Service.Strategy.fines.BookFineStrategy;
 import org.library.Service.Strategy.fines.FineStrategy;
 import org.library.Service.Strategy.fines.CDFineStrategy;
+import org.mockito.Mock;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -27,9 +29,12 @@ public class BorrowTest {
     private BorrowService service;
     private Clock originalClock;  // لاستعادة الـ Clock الأصلي
 
+    private EmailNotifier emailNotifier;
     @BeforeEach
     public void setUp() {
-        service = new BorrowService();
+
+
+        service = new BorrowService(emailNotifier);
         originalClock = service.getClock();  // حفظ الأصلي إذا كان setter/getter موجود
     }
 

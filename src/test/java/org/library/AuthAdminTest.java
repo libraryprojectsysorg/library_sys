@@ -4,12 +4,12 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.library.Domain.Loan;
 import org.library.Domain.User;
+import org.library.Service.Strategy.BookService;
 import org.library.Service.Strategy.BorrowService;
 import org.library.Service.Strategy.fines.FineCalculator;
 import org.library.Service.Strategy.ReminderService;
-import org.library.ui.AuthAdmin;
+import org.library.Service.Strategy.AuthAdmin;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -17,7 +17,6 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.PrintStream;
 import java.util.ArrayList;
-import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -40,14 +39,15 @@ public class AuthAdminTest {
     private FineCalculator mockFineCalculator;
     @Mock
     private ReminderService mockReminderService;
-
+    @Mock
+    private BookService mockbookService;
     @Mock
     private User mockUser;
 
     @BeforeEach
     public void setUp() {
 
-        authService = new AuthAdmin(mockBorrowService, mockReminderService, mockFineCalculator);
+        authService = new AuthAdmin(mockBorrowService, mockReminderService, mockFineCalculator, mockbookService);
 
 
         originalOut = System.out;
@@ -71,21 +71,21 @@ public class AuthAdminTest {
     public void testLoginSuccess() {
         boolean result = authService.login(VALID_EMAIL, VALID_PASSWORD);
         assertTrue(result);
-        assertTrue(authService.isLoggedIn());
+        assertTrue(authService.isLoggedInAdmin());
     }
 
     @Test
     public void testLoginFail() {
         boolean result = authService.login("wrong", "pass");
         assertFalse(result);
-        assertFalse(authService.isLoggedIn());
+        assertFalse(authService.isLoggedInAdmin());
     }
 
     @Test
     public void testLogout() {
         authService.login(VALID_EMAIL, VALID_PASSWORD);
         authService.logout();
-        assertFalse(authService.isLoggedIn());
+        assertFalse(authService.isLoggedInAdmin());
     }
 
     @Test

@@ -6,68 +6,57 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-/**
- * Service for book management (US1.3 Add Book, US1.4 Search Book).
- * Handles adding and searching books with duplicate checks.
- *
- * @author Your Name
- * @version 1.0-SNAPSHOT
- */
 public class BookService {
-    private List<Book> books;
 
-    /**
-     * Default constructor with empty book list.
-     */
-    public BookService() {
-        this.books = new ArrayList<>();  // Default for normal use
-    }
+    public BookService() { }
 
-    /**
-     * Constructor for dependency injection (e.g., mocking in tests).
-     *
-     * @param books the list of books to use (for mocking)
-     */
-    public BookService(List<Book> books) {
-        this.books = books;  // For Mockito inject
-    }
-
-    /**
-     * Adds a book if ISBN is not duplicate.
-     *
-     * @param title the book's title
-     * @param author the book's author
-     * @param isbn the book's ISBN
-     * @return true if added successfully, false if duplicate ISBN
-     * @throws IllegalArgumentException if title, author, or ISBN is invalid
-     */
-    public boolean addBook(String title, String author, String isbn) {  // Return boolean for coverage
+    public boolean addBook(String title, String author, String isbn) {
         if (title == null || author == null || isbn == null || title.isEmpty() || author.isEmpty() || isbn.isEmpty()) {
-            throw new IllegalArgumentException("Invalid book details");  // Branch for null/empty (edge case)
+            throw new IllegalArgumentException("Invalid book details");
         }
-        if (books.stream().anyMatch(b -> b.getIsbn().equals(isbn))) {
-            return false;  // Duplicate branch (fail without throw for test coverage)
+
+        List<Book> existingBooks = BookFileHandler.loadAllBooks();
+        if (existingBooks.stream().anyMatch(b -> b.getIsbn().equals(isbn))) {
+            return false;
         }
+
         Book newBook = new Book(title, author, isbn);
-        books.add(newBook);  // Searchable and available
+        BookFileHandler.saveBook(newBook);
         return true;
     }
 
-    /**
-     * Searches books by title, author, or ISBN.
-     *
-     * @param query the search query
-     * @return list of matching books (empty if no match or invalid query)
-     */
+    /** دالة بحث عامة تستخدم للبحث ولجلب الكتاب من الـ ISBN */
     public List<Book> searchBooks(String query) {
-        if (query == null || query.isEmpty()) {  // New branch for empty/null (edge case)
-            return new ArrayList<>();  // Empty list
+        if (query == null) {
+            return new ArrayList<>();
         }
+
+        List<Book> allBooks = BookFileHandler.loadAllBooks();
+
+        if (query.isEmpty()) {
+            return allBooks;
+        }
+
         String lowerQuery = query.toLowerCase();
-        return books.stream()
-                .filter(b -> b.getTitle().toLowerCase().contains(lowerQuery) ||  // True/false branch 1
-                        b.getAuthor().toLowerCase().contains(lowerQuery) ||  // True/false branch 2
-                        b.getIsbn().toLowerCase().contains(lowerQuery))  // True/false branch 3
-                .collect(Collectors.toList());  // No match → empty (covers false filter)
+
+        return allBooks.stream()
+                .filter(b -> b.getTitle().toLowerCase().contains(lowerQuery) ||
+                        b.getAuthor().toLowerCase().contains(lowerQuery) ||
+                        b.getIsbn().toLowerCase().contains(lowerQuery))
+                .collect(Collectors.toList());
+    }
+
+    public boolean removeByIsbn(String isbn) {
+        if (isbn == null || isbn.isEmpty()) return false;
+
+        List<Book> allBooks = BookFileHandler.loadAllBooks();
+
+        boolean removed = allBooks.removeIf(b -> b.getIsbn().equals(isbn));
+
+        if (removed) {
+            BookFileHandler.rewriteAllBooks(allBooks);
+        }
+
+        return removed;
     }
 }

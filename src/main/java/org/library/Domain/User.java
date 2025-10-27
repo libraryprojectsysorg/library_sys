@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * الكيان الذي يمثل مستخدم المكتبة.
+
  * Entity for library user (Sprint 4+).
  *
  * @author YourName
@@ -86,7 +86,10 @@ public class User {
                 .mapToInt(Fine::getAmount)
                 .sum();
     }
-
+    public void payAllFines() {
+        fines.forEach(f -> f.setPaid(true)); // تعيين جميع الغرامات كمدفوعة
+        updateHasUnpaidFines();             // تحديث العلامة الداخلية
+    }
     /**
      * تحديث حالة hasUnpaidFines (Internal Logic).
      */
