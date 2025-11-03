@@ -4,7 +4,8 @@ import org.library.Service.Strategy.fines.FineStrategy;
 
 /**
  * Abstract for media (Sprint 5: polymorphism).
- * @author YourName
+ * @author Weam Ahmad
+ * @author  Seba Abd Aljwwad
  * @version 1.0
  */
 public abstract class Media {

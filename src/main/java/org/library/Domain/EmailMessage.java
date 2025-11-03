@@ -2,7 +2,8 @@ package org.library.Domain;
 
 /**
  * Value object for email notifications (Sprint 3).
- * @author YourName
+ * @author Weam Ahmad
+ * @author  Seba Abd Aljwwad
  * @version 1.0
  */
 public class EmailMessage {
