@@ -1,8 +1,15 @@
+/**
+ * @author Weam Ahmad
+ * @author  Seba Abd Aljwwad
+
+
+ */
+
 package org.library.Service.Strategy;
 
 import org.library.Domain.Book;
 import org.library.Domain.User;
-
+import org.library.Service.Strategy.*;
 import org.library.Service.Strategy.fines.FineCalculator;
 
 import java.util.List;

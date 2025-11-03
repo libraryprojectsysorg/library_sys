@@ -6,8 +6,8 @@ import java.time.LocalDate;
  * يمثل كيان إعارة وسيط (Loan Entity).
  * يخزن حالة الإعارة (الوسيط، المستخدم، التواريخ).
  * يتميز بدعم تعدد الأشكال للتعامل مع الكتب والأقراص المدمجة (Sprint 5).
- * * @author Weam Ahmad
- * @author Seba Abd Aljwwad
+ * @author Weam Ahmad
+ * @author  Seba Abd Aljwwad
  * @version 1.1
  */
 public class Loan {

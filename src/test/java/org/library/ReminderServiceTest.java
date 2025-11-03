@@ -13,7 +13,8 @@ import java.util.List;
 
 /**
  * Tests for ReminderService (US3.1, Sprint 3).
- * @author YourName
+ * @author Weam Ahmad
+ * @author  Seba Abd Aljwwad
  * @version 1.0
  */
 @ExtendWith(MockitoExtension.class)

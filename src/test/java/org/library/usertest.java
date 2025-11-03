@@ -9,7 +9,8 @@ import static org.junit.jupiter.api.Assertions.*;
 /**
  * Unit tests for User (Domain Layer, Sprints 2-4).
  *
- * @author YourName
+ * @author Weam Ahmad
+ * @author  Seba Abd Aljwwad
  * @version 1.2
  */
 public class usertest {

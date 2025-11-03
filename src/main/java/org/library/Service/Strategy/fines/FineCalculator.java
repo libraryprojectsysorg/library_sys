@@ -8,7 +8,8 @@ import java.time.LocalDate;
 
 /**
  * Service for fine calculation (Sprint 5: Strategy + mixed media).
- * @author YourName
+ * @author Weam Ahmad
+ * @author  Seba Abd Aljwwad
  * @version 1.0
  */
 public class FineCalculator {

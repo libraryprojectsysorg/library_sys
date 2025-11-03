@@ -1,11 +1,12 @@
 package org.library;
 
+import org.library.Service.Strategy.*;
 import org.library.Domain.Book;
 import org.library.Domain.Fine;
 import org.library.Domain.Loan;
 import org.library.Domain.User;
 
-import org.library.Service.Strategy.*;
+
 import org.library.Service.Strategy.fines.FineCalculator;
 
 import java.time.LocalDate;
