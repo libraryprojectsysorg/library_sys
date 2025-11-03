@@ -7,7 +7,8 @@ import java.util.List;
 
 /**
  * Service for reminders using Observer (Sprint 3).
- * @author YourName
+ * @author Weam Ahmad
+ * @author  Seba Abd Aljwwad
  * @version 1.0
  */
 public class ReminderService {

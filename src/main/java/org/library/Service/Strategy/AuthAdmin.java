@@ -1,8 +1,15 @@
+/**
+ * @author Weam Ahmad
+ * @author  Seba Abd Aljwwad
+
+
+ */
+
 package org.library.Service.Strategy;
 
 import org.library.Domain.Book;
 import org.library.Domain.User;
-
+import org.library.Service.Strategy.*;
 import org.library.Service.Strategy.fines.FineCalculator;
 
 import java.util.List;
@@ -69,13 +76,12 @@ public class AuthAdmin {
         loggedInEmail = null;
     }
 
-    public void showAdminMenu() {
+    public void showAdminMenu(Scanner scanner) {
         if (!isLoggedInAdmin()) {
             System.out.println("❌ هذه القائمة مخصصة للمدراء فقط.");
             return;
         }
 
-        Scanner scanner = new Scanner(System.in);
         while (isLoggedIn) {
 
             System.out.println("\n=== Admin Menu ===");
@@ -94,11 +100,9 @@ public class AuthAdmin {
                     System.out.println("No input. Exiting menu.");
                     break;
                 }
-                choice = scanner.nextInt();
-                scanner.nextLine();
+                choice = Integer.parseInt(scanner.nextLine().trim());
             } catch (Exception e) {
                 System.out.println("Invalid input. Please enter a number.");
-                scanner.nextLine();
                 continue;
             }
 
@@ -108,12 +112,9 @@ public class AuthAdmin {
                 case 3: viewAllBooks(); break;
                 case 4: reminderService.sendReminders(); break;
 
-                case 5 : // 🔥 منطق إلغاء التسجيل المعدل باستخدام ID
+                case 5: // Unregister user
                     System.out.print("Enter user ID to unregister: ");
-                    if (!scanner.hasNextLine()) {
-                        System.out.println("No input. Skipping.");
-                        break;
-                    }
+                    if (!scanner.hasNextLine()) break;
                     String userId = scanner.nextLine().trim();
                     User user = findUserById(userId);
 
@@ -122,54 +123,39 @@ public class AuthAdmin {
                         break;
                     }
 
-                    // 1. التحقق من الشروط
                     if (borrowService.hasActiveLoans(user) || user.hasUnpaidFines()) {
                         System.out.println("⚠️ لا يمكن إلغاء التسجيل: للمستخدم قروض نشطة أو غرامات غير مدفوعة.");
                         break;
                     }
 
-                    // 2. حذف القروض من ملف القروض
                     borrowService.unregisterUser(userId);
-
-                    // 3. حذف المستخدم من قائمة الـ cache
                     this.users.remove(user);
-
-                    // 4. حذف المستخدم من ملف users.txt باستخدام الـ ID
                     boolean removedFromFile = UserFileHandler.removeUserById(userId);
-
-                    if (removedFromFile) {
-                        System.out.println("✅ تم إلغاء تسجيل المستخدم ذي الـ ID " + userId + " بنجاح!");
-                    } else {
-                        System.out.println("❌ خطأ: فشل في حذف المستخدم من الملف.");
-                    }
+                    System.out.println(removedFromFile ?
+                            "✅ تم إلغاء تسجيل المستخدم بنجاح!" :
+                            "❌ خطأ: فشل في حذف المستخدم من الملف.");
                     break;
+
                 case 6: // Fine summary
                     System.out.print("Enter user ID for fine summary: ");
-                    if (!scanner.hasNextLine()) {
-                        System.out.println("No input. Skipping.");
-                        break;
-                    }
+                    if (!scanner.hasNextLine()) break;
                     userId = scanner.nextLine().trim();
                     user = findUserById(userId);
                     if (user == null) {
                         System.out.println("User not found.");
                         break;
                     }
-
                     int total = fineCalculator.calculateTotalFine(user);
-                    System.out.println("إجمالي الغرامات المستحقة على المستخدم: " + total + " NIS.");
+                    System.out.println("إجمالي الغرامات المستحقة: " + total + " NIS.");
                     break;
 
-                case 7 : {
-                    logout();
-                    System.out.println("Logged out.");
-                }
-                default:
-                    System.out.println("Invalid option. Try again.");
-                    break;
+                case 7: logout(); System.out.println("Logged out."); break;
+
+                default: System.out.println("Invalid option. Try again."); break;
             }
         }
     }
+
 
     private User findUserById(String id) {
         return users.stream()

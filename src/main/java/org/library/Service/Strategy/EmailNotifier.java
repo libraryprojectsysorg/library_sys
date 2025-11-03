@@ -7,8 +7,12 @@ import org.library.Domain.User;
 
 /**
  * تطبيق لنمط الملاحظ (Observer) يرسل الإشعارات عبر البريد الإلكتروني.
- *
- * @author YourName
+
+ * @author Weam Ahmad
+ * @author  Seba Abd Aljwwad
+
+
+
  * @version 1.1
  */
 public class EmailNotifier implements Observer {

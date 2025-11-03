@@ -13,6 +13,8 @@ public class OverdueReport {
     private final int overdueBooksCount;
 
     /**
+     * @author Weam Ahmad
+     * @author  Seba Abd Aljwwad
      * Constructor.
      * @param user the user
      * @param overdueBooksCount the count

@@ -9,7 +9,8 @@ import java.util.Objects;
 
  * Entity for library user (Sprint 4+).
  *
- * @author YourName
+ * @author Weam Ahmad
+ * @author  Seba Abd Aljwwad
  * @version 1.1
  */
 public class User {

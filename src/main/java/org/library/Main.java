@@ -1,17 +1,15 @@
 package org.library;
 
+import org.library.Service.Strategy.*;
 import org.library.Domain.Book;
 import org.library.Domain.Fine;
 import org.library.Domain.Loan;
 import org.library.Domain.User;
-
-import org.library.Service.Strategy.*;
 import org.library.Service.Strategy.fines.FineCalculator;
 
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Scanner;
-import java.util.UUID;
 
 public class Main {
 
@@ -64,7 +62,7 @@ public class Main {
 
         if (authAdmin.isLoggedInAdmin()) {
             System.out.println("\n🌟 تم تسجيل الدخول كـ **مدير**.");
-            authAdmin.showAdminMenu();
+            authAdmin.showAdminMenu(scanner); // ✅ التعديل هنا
         } else {
             User user = findUserByEmail(loggedInEmail);
             if (user != null) {
@@ -128,7 +126,6 @@ public class Main {
 
                     try {
                         borrowService.borrowMedia(bookToBorrow, user);
-
                         System.out.println("✅ تم استعارة كتاب: " + bookToBorrow.getTitle() + " بنجاح!");
                     } catch (RuntimeException e) {
                         System.out.println("❌ فشل الاستعارة: " + e.getMessage());
@@ -177,7 +174,6 @@ public class Main {
 
     /** بيانات تجريبية لتجربة النظام. */
     private static void setupDemoData(BorrowService borrowService, BookService bookService) {
-
         String demoEmail = "demo@example.com";
         // 1. ضمان وجود المستخدم التجريبي
         if (UserFileHandler.getUserByCredentials(demoEmail, "pass123") == null) {

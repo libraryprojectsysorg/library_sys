@@ -6,7 +6,8 @@ import org.library.Domain.EmailMessage; // (2) استيراد كائن القي�
  * التطبيق الفعلي لخادم البريد الإلكتروني (Production, Sprint 3).
  * يقوم هذا الكلاس بمحاكاة إرسال البريد الإلكتروني.
  *
- * @author YourName
+ * @author Weam Ahmad
+ * @author  Seba Abd Aljwwad
  * @version 1.1
  */
 public class RealEmailServer implements EmailServer {

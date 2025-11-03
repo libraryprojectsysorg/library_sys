@@ -4,7 +4,9 @@ import org.library.Domain.EmailMessage;
 
 /**
  * Email server interface (Sprint 3).
- * @author YourName
+
+ * @author Weam Ahmad
+ * @author  Seba Abd Aljwwad
  * @version 1.0
  */
 public interface EmailServer {
