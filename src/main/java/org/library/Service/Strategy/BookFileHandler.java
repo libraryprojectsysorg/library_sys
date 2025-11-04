@@ -7,18 +7,23 @@
 package org.library.Service.Strategy;
 
 import org.library.Domain.Book;
+
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
 public class BookFileHandler {
 
-    private static final String BOOKS_FILE = "books.txt";
+    private static String booksFile = "books.txt"; // غير final
+
+    // تتيح تغيير مسار الملف للاختبارات
+    public static void setBooksFile(String filePath) {
+        booksFile = filePath;
+    }
 
     public static void saveBook(Book book) {
-        try (FileWriter writer = new FileWriter(BOOKS_FILE, true);
+        try (FileWriter writer = new FileWriter(booksFile, true);
              PrintWriter printWriter = new PrintWriter(writer)) {
-            // التنسيق: Title,Author,ISBN
             String bookData = book.getTitle() + "," + book.getAuthor() + "," + book.getIsbn();
             printWriter.println(bookData);
         } catch (IOException e) {
@@ -28,7 +33,7 @@ public class BookFileHandler {
 
     public static List<Book> loadAllBooks() {
         List<Book> books = new ArrayList<>();
-        try (BufferedReader reader = new BufferedReader(new FileReader(BOOKS_FILE))) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(booksFile))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 String[] parts = line.split(",", 3);
@@ -44,9 +49,8 @@ public class BookFileHandler {
     }
 
     public static void rewriteAllBooks(List<Book> books) {
-        try (FileWriter writer = new FileWriter(BOOKS_FILE, false);
+        try (FileWriter writer = new FileWriter(booksFile, false);
              PrintWriter printWriter = new PrintWriter(writer)) {
-
             for (Book book : books) {
                 String bookData = book.getTitle() + "," + book.getAuthor() + "," + book.getIsbn();
                 printWriter.println(bookData);
