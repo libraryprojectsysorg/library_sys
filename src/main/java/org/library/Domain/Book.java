@@ -27,7 +27,7 @@ public class Book extends Media {  // Extend Media for Sprint 5 polymorphism
      */
     @Override
     public int getLoanDays() {
-        return 28;  // Book: +28 days
+        return 1;  // Book: +28 days
     }
 
     /**
