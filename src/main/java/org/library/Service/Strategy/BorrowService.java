@@ -1,17 +1,10 @@
 /**
  * @author Weam Ahmad
- * @author  Seba Abd Aljwwad
-
+ * @author Seba Abd Aljwwad
  */
-
 package org.library.Service.Strategy;
 
-import org.library.Domain.Loan;
-import org.library.Domain.Media;
-import org.library.Domain.User;
-import org.library.Domain.Fine;
-
-
+import org.library.Domain.*;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
@@ -22,13 +15,21 @@ public class BorrowService {
 
     private Clock clock = Clock.systemDefaultZone();
     private final EmailNotifier emailNotifier;
+    private final LoanFileHandler loanFileHandler; // ← Dependency
 
-    public BorrowService(EmailNotifier emailNotifier) {
+    // Constructor الجديد
+    public BorrowService(EmailNotifier emailNotifier, LoanFileHandler loanFileHandler) {
         this.emailNotifier = emailNotifier;
+        this.loanFileHandler = loanFileHandler;
+    }
+
+    // Constructor القديم (للـ production)
+    public BorrowService(EmailNotifier emailNotifier) {
+        this(emailNotifier, new LoanFileHandler());
     }
 
     public List<Loan> getLoans() {
-        return LoanFileHandler.loadAllLoans();
+        return loanFileHandler.loadAllLoans();
     }
 
     public Loan borrowMedia(Media media, User user) {
@@ -43,37 +44,29 @@ public class BorrowService {
         String loanId = "LOAN_" + System.currentTimeMillis();
         Loan loan = new Loan(loanId, media, user, borrowDate, dueDate);
 
-        LoanFileHandler.saveLoan(loan);
-
+        loanFileHandler.saveLoan(loan); // ← استخدم الـ dependency
         media.setAvailable(false);
         return loan;
     }
 
-    public int returnMedia(Loan loan) {
+    public int returnMedia(String loanId) {
         List<Loan> activeLoans = getLoans();
 
-        // البحث عن القرض المراد حذفه في القائمة المحملة
-        boolean removedFromList = activeLoans.removeIf(l -> l.getMedia().equals(loan.getMedia()));
+        Loan loan = activeLoans.stream()
+                .filter(l -> l.getLoanId().equals(loanId))
+                .findFirst()
+                .orElseThrow(() -> new IllegalArgumentException("Loan not found in active loans."));
 
-        if (!removedFromList) {
-            throw new IllegalArgumentException("Loan not found in active loans.");
-        }
-
+        activeLoans.remove(loan);
         int fineAmount = calculateFineForLoan(loan);
-
-        LoanFileHandler.rewriteAllLoans(activeLoans); // إعادة كتابة القائمة المحدثة
-
+        loanFileHandler.rewriteAllLoans(activeLoans); // ← استخدم الـ dependency
         loan.getMedia().setAvailable(true);
 
         if (fineAmount > 0) {
-            User user = loan.getUser();
-            Fine newFine = new Fine(fineAmount);
-            user.addFine(newFine);
-            // ملاحظة: يجب تحديث ملف المستخدمين بعد إضافة الغرامة
-            return fineAmount;
+            loan.getUser().addFine(new Fine(fineAmount));
         }
 
-        return 0;
+        return fineAmount;
     }
 
     public boolean hasActiveLoans(User user) {
@@ -81,30 +74,25 @@ public class BorrowService {
     }
 
     public void addLoan(Loan loan) {
-        LoanFileHandler.saveLoan(loan);
+        loanFileHandler.saveLoan(loan);
     }
 
-    /** إلغاء تسجيل المستخدم بحذف جميع الإعارات المتعلقة به من الملف. */
     public boolean unregisterUser(String userId) {
         List<Loan> activeLoans = getLoans();
         boolean removed = activeLoans.removeIf(loan -> loan.getUser().getId().equals(userId));
-
         if (removed) {
-            LoanFileHandler.rewriteAllLoans(activeLoans);
+            loanFileHandler.rewriteAllLoans(activeLoans);
         }
         return removed;
     }
 
     public boolean returnLoan(String loanId) {
-        List<Loan> activeLoans = getLoans();
-
-        for (Loan loan : activeLoans) {
-            if (loan.getMedia().equals(loanId)) {
-                returnMedia(loan);
-                return true;
-            }
+        try {
+            returnMedia(loanId);
+            return true;
+        } catch (IllegalArgumentException e) {
+            return false;
         }
-        return false;
     }
 
     public int calculateFineForLoan(Loan loan) {
@@ -116,6 +104,7 @@ public class BorrowService {
     public boolean isOverdue(Loan loan) {
         return LocalDate.now(clock).isAfter(loan.getDueDate());
     }
+
     private boolean hasOverdueLoans(User user) {
         return getLoans().stream().anyMatch(l -> l.getUser().equals(user) && isOverdue(l));
     }
@@ -126,6 +115,7 @@ public class BorrowService {
                 .mapToInt(this::calculateFineForLoan)
                 .sum();
     }
+
     public void sendOverdueReminders() {
         if (emailNotifier == null) {
             throw new IllegalStateException("EmailNotifier service is not configured.");
@@ -142,6 +132,7 @@ public class BorrowService {
                     // emailNotifier.notify(user, message);
                 });
     }
+
     public List<User> getUsersWithOverdueLoans() {
         return getLoans().stream()
                 .filter(this::isOverdue)
@@ -150,25 +141,17 @@ public class BorrowService {
                 .toList();
     }
 
-    /**
-     * 🔥 الوظيفة المضافة 2: عدّ القروض المتأخرة لمستخدم معين.
-     */
     public int countOverdueLoansForUser(User user) {
         return (int) getLoans().stream()
                 .filter(loan -> loan.getUser().equals(user) && isOverdue(loan))
                 .count();
     }
+
     public Clock getClock() {
         return clock;
     }
 
-
-/**
- * يسمح بتبديل ساعة النظام بساعة وهمية (Mock Clock) للاختبار.
- * @param mockClock الساعة الوهمية الجديدة.
- */
-        public void setClock(Clock mockClock) {
-            this.clock = mockClock; // 🔥 هذا هو السطر المطلوب
-        }
+    public void setClock(Clock mockClock) {
+        this.clock = mockClock;
     }
-
+}

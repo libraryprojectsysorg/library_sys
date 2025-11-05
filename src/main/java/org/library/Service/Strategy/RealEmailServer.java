@@ -1,36 +1,55 @@
-package org.library.Service.Strategy; // (1) تصحيح الحزمة لتناسب نمط الإشعارات
+package org.library.Service.Strategy;
 
-import org.library.Domain.EmailMessage; // (2) استيراد كائن القيمة من Domain Layer
+import io.github.cdimascio.dotenv.Dotenv;
+import jakarta.mail.*;
+import jakarta.mail.internet.*;
+import org.library.Domain.EmailMessage;
+
+import java.util.Properties;
 
 /**
- * التطبيق الفعلي لخادم البريد الإلكتروني (Production, Sprint 3).
- * يقوم هذا الكلاس بمحاكاة إرسال البريد الإلكتروني.
- *
+
  * @author Weam Ahmad
  * @author  Seba Abd Aljwwad
- * @version 1.1
+ * @version 2.0
  */
 public class RealEmailServer implements EmailServer {
 
-    /**
-     * واجهة وهمية (Mock Interface) لتمثيل خادم البريد.
-     * يجب تعريفها في مكان ما (يفضل org.library.service.notification).
-     */
-    public interface EmailServer {
-        void send(EmailMessage email);
+    private final String adminEmail;
+    private final String adminPass;
+
+    public RealEmailServer() {
+        Dotenv dotenv = Dotenv.load();
+        this.adminEmail = dotenv.get("ADMIN_EMAIL");
+        this.adminPass = dotenv.get("ADMIN_PASS");
     }
 
-    /**
-     * يقوم بمحاكاة إرسال البريد الإلكتروني.
-     * @param email كائن الرسالة المراد إرسالها.
-     */
     @Override
     public void send(EmailMessage email) {
-        // محاكاة عملية الإرسال
-        System.out.println("--- EMAIL SENT ---");
-        System.out.println("To: " + email.getRecipientEmail());
-        System.out.println("Subject: " + email.getSubject());
-        System.out.println("Content: " + email.getContent());
-        System.out.println("------------------");
+        try {
+            Properties props = new Properties();
+            props.put("mail.smtp.auth", "true");
+            props.put("mail.smtp.starttls.enable", "true");
+            props.put("mail.smtp.host", "smtp.gmail.com");
+            props.put("mail.smtp.port", "587");
+
+            Session session = Session.getInstance(props, new Authenticator() {
+                protected PasswordAuthentication getPasswordAuthentication() {
+                    return new PasswordAuthentication(adminEmail, adminPass);
+                }
+            });
+
+            Message message = new MimeMessage(session);
+            message.setFrom(new InternetAddress(adminEmail));
+            message.setRecipients(Message.RecipientType.TO,
+                    InternetAddress.parse(email.getRecipientEmail()));
+            message.setSubject(email.getSubject());
+            message.setText(email.getContent());
+
+            Transport.send(message);
+            System.out.println("✅ تم إرسال الإيميل إلى: " + email.getRecipientEmail());
+        } catch (Exception e) {
+            System.out.println("❌ فشل إرسال الإيميل: " + e.getMessage());
+        }
     }
 }

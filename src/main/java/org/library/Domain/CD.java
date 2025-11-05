@@ -13,7 +13,6 @@ import org.library.Service.Strategy.fines.FineStrategy;
 public class CD extends Media {
 
     /**
-
      * @param title .
      * @param author .
      * @param isbn .
@@ -23,7 +22,6 @@ public class CD extends Media {
     }
 
     /**
-
      * * @return .
      */
     @Override
@@ -32,7 +30,6 @@ public class CD extends Media {
     }
 
     /**
-
      * * @return .
      */
     @Override

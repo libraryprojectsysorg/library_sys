@@ -6,11 +6,9 @@
 
 package org.library.Service.Strategy;
 
-import org.library.Domain.Loan;
-import org.library.Domain.Media;
-import org.library.Domain.User;
-import org.library.Domain.Book;
-import org.library.Service.Strategy.BookService; // يستخدم لجلب كائن Book
+import org.library.Domain.*;
+import org.library.Service.Strategy.BookService;
+
 import java.io.*;
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -21,8 +19,12 @@ public class LoanFileHandler {
 
     private static final String LOANS_FILE = "loans.txt";
 
-    public static List<Loan> loadAllLoans() {
+    public List<Loan> loadAllLoans() {
         List<Loan> loans = new ArrayList<>();
+        File file = new File(LOANS_FILE);
+        if (!file.exists()) {
+            return loans;
+        }
         try (BufferedReader reader = new BufferedReader(new FileReader(LOANS_FILE))) {
             String line;
             while ((line = reader.readLine()) != null) {
@@ -35,72 +37,67 @@ public class LoanFileHandler {
                         LocalDate borrowDate = LocalDate.parse(parts[3]);
                         LocalDate dueDate = LocalDate.parse(parts[4]);
 
-                        User user = findUserById(userId);
                         Media media = findMediaByIsbn(mediaIsbn);
+                        User user = findUserById(userId);
 
                         if (user != null && media != null) {
                             loans.add(new Loan(loanId, media, user, borrowDate, dueDate));
                         }
                     } catch (Exception e) {
-                        System.err.println("❌ خطأ في تحليل سطر الإعارة: " + line + ". " + e.getMessage());
+                        System.err.println("خطأ في تحليل السطر: " + line);
                     }
                 }
             }
-        } catch (FileNotFoundException e) { }
-        catch (IOException e) {
-            System.err.println("❌ خطأ أثناء قراءة ملف الإعارات: " + e.getMessage());
+        } catch (IOException e) {
+            System.err.println("خطأ في قراءة الملف: " + e.getMessage());
         }
         return loans;
     }
 
-    public static void saveLoan(Loan loan) {
-        try (FileWriter writer = new FileWriter(LOANS_FILE, true);
-             PrintWriter printWriter = new PrintWriter(writer)) {
-
-            // التنسيق: LoanID,MediaISBN,UserID,BorrowDate,DueDate
-            String loanData = String.format("%s,%s,%s,%s,%s",
-                    loan.getMedia(),
+    public void saveLoan(Loan loan) {
+        try (PrintWriter writer = new PrintWriter(new FileWriter(LOANS_FILE, true))) {
+            String line = String.format("%s,%s,%s,%s,%s",
+                    loan.getLoanId(),
                     loan.getMedia().getIsbn(),
                     loan.getUser().getId(),
-                    loan.getBorrowDate().toString(),
-                    loan.getDueDate().toString());
-
-            printWriter.println(loanData);
+                    loan.getBorrowDate(),
+                    loan.getDueDate());
+            writer.println(line);
         } catch (IOException e) {
-            System.err.println("❌ خطأ أثناء حفظ الإعارة في الملف: " + e.getMessage());
+            System.err.println("خطأ في حفظ الإعارة: " + e.getMessage());
         }
     }
 
-    public static void rewriteAllLoans(List<Loan> loans) {
-        try (FileWriter writer = new FileWriter(LOANS_FILE, false);
-             PrintWriter printWriter = new PrintWriter(writer)) {
-
+    public void rewriteAllLoans(List<Loan> loans) {
+        try (PrintWriter writer = new PrintWriter(new FileWriter(LOANS_FILE))) {
             for (Loan loan : loans) {
-                String loanData = String.format("%s,%s,%s,%s,%s",
-                        loan.getMedia(),
+                String line = String.format("%s,%s,%s,%s,%s",
+                        loan.getLoanId(),
                         loan.getMedia().getIsbn(),
                         loan.getUser().getId(),
-                        loan.getBorrowDate().toString(),
-                        loan.getDueDate().toString());
-                printWriter.println(loanData);
+                        loan.getBorrowDate(),
+                        loan.getDueDate());
+                writer.println(line);
             }
         } catch (IOException e) {
-            System.err.println("❌ خطأ أثناء إعادة كتابة ملف الإعارات: " + e.getMessage());
+            System.err.println("خطأ في إعادة كتابة الملف: " + e.getMessage());
         }
     }
 
-    /** دالة مساعدة للبحث عن كائن Media (كتاب) بناءً على ISBN. */
-    private static Media findMediaByIsbn(String isbn) {
-        // يتم إنشاء BookService مؤقتاً للبحث في ملف الكتب
-        List<Book> allBooks = new BookService().searchBooks(isbn);
-        // يتم تصفية النتائج للبحث عن التطابق التام بالـ ISBN
-        Optional<Book> result = allBooks.stream().filter(b -> b.getIsbn().equals(isbn)).findFirst();
+    private Media findMediaByIsbn(String isbn) {
+        BookService bookService = new BookService();
+        List<Book> books = bookService.searchBooks(isbn);
+        Optional<Book> result = books.stream()
+                .filter(b -> b.getIsbn().equals(isbn))
+                .findFirst();
         return result.orElse(null);
     }
 
-    /** دالة مساعدة للبحث عن المستخدم بواسطة ID. */
-    private static User findUserById(String userId) {
-        return UserFileHandler.loadAllUsers().stream()
-                .filter(u -> u.getId().equals(userId)).findFirst().orElse(null);
+    private User findUserById(String userId) {
+        List<User> users = UserFileHandler.loadAllUsers(); // افترض إن عندك UserFileHandler
+        return users.stream()
+                .filter(u -> u.getId().equals(userId))
+                .findFirst()
+                .orElse(null);
     }
 }

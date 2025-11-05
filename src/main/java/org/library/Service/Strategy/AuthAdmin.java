@@ -10,11 +10,12 @@ package org.library.Service.Strategy;
 import org.library.Domain.Book;
 import org.library.Domain.User;
 import org.library.Service.Strategy.*;
+import org.library.Domain.CD;
 import org.library.Service.Strategy.fines.FineCalculator;
 
 import java.util.List;
 import java.util.Scanner;
-
+import io.github.cdimascio.dotenv.Dotenv;
 public class AuthAdmin {
 
     private final List<User> users;
@@ -25,9 +26,10 @@ public class AuthAdmin {
     private final BorrowService borrowService;
     private final ReminderService reminderService;
     private final FineCalculator fineCalculator;
+    private static final Dotenv dotenv = Dotenv.load();
+    private static final String ADMIN_EMAIL = dotenv.get("ADMIN_EMAIL");
+    private static final String ADMIN_PASS = dotenv.get("ADMIN_PASS");
 
-    private static final String ADMIN_EMAIL = "s12217663@stu.najah.edu";
-    private static final String ADMIN_PASS = "ws1234";
 
     public AuthAdmin(BorrowService borrowService, ReminderService reminderService, FineCalculator fineCalculator, BookService bookService) {
 
@@ -84,17 +86,18 @@ public class AuthAdmin {
 
         while (isLoggedIn) {
 
-            System.out.println("\n=== Admin Menu ===");
             System.out.println("1. Add Book");
             System.out.println("2. Delete Book");
             System.out.println("3. View All Books");
-            System.out.println("4. Send Overdue Reminders (US3.1)");
-            System.out.println("5. Unregister User (US4.2)");
-            System.out.println("6. Fine Summary (US5.3)");
-            System.out.println("7. Logout (US1.2)");
+            System.out.println("4. Add CD");
+            System.out.println("5. Delete CD");
+            System.out.println("6. View All CDs");
+            System.out.println("7. Send Overdue Reminders (US3.1)");
+            System.out.println("8. Unregister User (US4.2)");
+            System.out.println("9. Fine Summary (US5.3)");
+            System.out.println("10. Logout (US1.2)");
             System.out.print("Choose option: ");
-
-            int choice;
+             int choice;
             try {
                 if (!scanner.hasNextLine()) {
                     System.out.println("No input. Exiting menu.");
@@ -110,9 +113,40 @@ public class AuthAdmin {
                 case 1: addBookInteractive(scanner); break;
                 case 2: deleteBookInteractive(scanner); break;
                 case 3: viewAllBooks(); break;
-                case 4: reminderService.sendReminders(); break;
+                case 4: addCDInteractive(scanner); break;
+                case 5: deleteCDInteractive(scanner); break;
+                case 6: viewAllCDs(); break;
 
-                case 5: // Unregister user
+                case 7:
+                    System.out.print("أدخل الإيميل الذي تريد إرسال رسالة له: ");
+                    String targetEmail = scanner.nextLine().trim();
+
+                    User targetUser = users.stream()
+                            .filter(u -> u.getEmail().equalsIgnoreCase(targetEmail))
+                            .findFirst()
+                            .orElse(null);
+                    if (targetUser == null) {
+                        System.out.println("❌ المستخدم غير موجود.");
+                        break;
+                    }
+                    int totalFine = fineCalculator.calculateTotalFine(targetUser);
+
+                    if (totalFine == 0) {
+                        System.out.println("✅ المستخدم ليس لديه أي غرامات مستحقة.");
+                        break;
+                    }
+                    String messageContent = "يجب عليك دفع الغرامة المالية التي قدرها "
+                            + totalFine + " شيكل بسبب تأخير إعادة الوسائط.";
+
+
+                    RealEmailServer realEmailServer = new RealEmailServer();
+                    EmailNotifier emailNotifier = new EmailNotifier(realEmailServer);
+                    emailNotifier.notify(targetUser, messageContent);
+
+                    System.out.println("✅ تم إرسال البريد الإلكتروني بنجاح إلى " + targetEmail);
+                    break;
+
+                case 8: // Unregister user
                     System.out.print("Enter user ID to unregister: ");
                     if (!scanner.hasNextLine()) break;
                     String userId = scanner.nextLine().trim();
@@ -136,7 +170,7 @@ public class AuthAdmin {
                             "❌ خطأ: فشل في حذف المستخدم من الملف.");
                     break;
 
-                case 6: // Fine summary
+                case 9: // Fine summary
                     System.out.print("Enter user ID for fine summary: ");
                     if (!scanner.hasNextLine()) break;
                     userId = scanner.nextLine().trim();
@@ -149,7 +183,7 @@ public class AuthAdmin {
                     System.out.println("إجمالي الغرامات المستحقة: " + total + " NIS.");
                     break;
 
-                case 7: logout(); System.out.println("Logged out."); break;
+                case 10: logout(); System.out.println("Logged out."); break;
 
                 default: System.out.println("Invalid option. Try again."); break;
             }
@@ -178,6 +212,43 @@ public class AuthAdmin {
             else System.out.println("⚠️ A book with this ISBN already exists.");
         } catch (IllegalArgumentException e) {
             System.out.println("❌ Invalid book details. Please try again.");
+        }
+    }
+    public void addCDInteractive(Scanner scanner) {
+        System.out.print("Enter CD code (ISBN/ID): ");
+        String isbn = scanner.nextLine().trim();
+        System.out.print("Enter CD title: ");
+        String title = scanner.nextLine().trim();
+        System.out.print("Enter CD author/artist: ");
+        String author = scanner.nextLine().trim();
+
+        try {
+            boolean added = CDFileHandler.saveCD(new CD( title, author,isbn));
+            if (added) System.out.println("✅ CD added successfully!");
+            else System.out.println("⚠ A CD with this code already exists.");
+        } catch (IllegalArgumentException e) {
+            System.out.println("❌ Invalid CD details. Please try again.");
+        }
+    }
+
+    public void deleteCDInteractive(Scanner scanner) {
+        System.out.print("Enter CD code to delete: ");
+        String code = scanner.nextLine().trim();
+
+        boolean removed = CDFileHandler.removeCDByCode(code);
+        if (removed) System.out.println("✅ CD deleted successfully!");
+        else System.out.println("❌ No CD found with that code.");
+    }
+
+    public void viewAllCDs() {
+        List<CD> allCDs = CDFileHandler.loadAllCDs();
+        if (allCDs.isEmpty()) {
+            System.out.println("📀 No CDs found.");
+            return;
+        }
+        System.out.println("=== All CDs ===");
+        for (CD cd : allCDs) {
+            System.out.println("- Code: " + cd.getIsbn() + " | Title: " + cd.getTitle() + " | Author/Artist: " + cd.getAuthor());
         }
     }
 

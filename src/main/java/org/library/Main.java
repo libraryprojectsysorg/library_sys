@@ -1,12 +1,11 @@
 package org.library;
 
+import org.library.Domain.*;
 import org.library.Service.Strategy.*;
-import org.library.Domain.Book;
-import org.library.Domain.Fine;
-import org.library.Domain.Loan;
-import org.library.Domain.User;
 import org.library.Service.Strategy.fines.FineCalculator;
 
+import java.io.PrintStream;
+import java.io.UnsupportedEncodingException;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Scanner;
@@ -14,6 +13,13 @@ import java.util.Scanner;
 public class Main {
 
     public static void main(String[] args) {
+        // إجبار الـ Console على UTF-8
+        try {
+            System.setOut(new PrintStream(System.out, true, "UTF-8"));
+        } catch (UnsupportedEncodingException e) {
+            e.printStackTrace();
+        }
+
         Scanner scanner = new Scanner(System.in);
 
         // ===== إعداد الخدمات (Dependency Injection) =====
@@ -45,7 +51,7 @@ public class Main {
                     loggedInEmail = email;
                     System.out.println(authAdmin.getErrorMessage());
                 } else {
-                    System.out.println("❌ خطأ: البريد الإلكتروني أو كلمة المرور غير صحيحة.");
+                    System.out.println("خطأ: البريد الإلكتروني أو كلمة المرور غير صحيحة.");
                 }
 
             } else if (response.equalsIgnoreCase("لا")) {
@@ -61,15 +67,15 @@ public class Main {
         }
 
         if (authAdmin.isLoggedInAdmin()) {
-            System.out.println("\n🌟 تم تسجيل الدخول كـ **مدير**.");
-            authAdmin.showAdminMenu(scanner); // ✅ التعديل هنا
+            System.out.println("\nتم تسجيل الدخول كـ **مدير**.");
+            authAdmin.showAdminMenu(scanner);
         } else {
             User user = findUserByEmail(loggedInEmail);
             if (user != null) {
-                System.out.println("\n👤 تم تسجيل الدخول كـ **مستخدم عادي**.");
+                System.out.println("\nتم تسجيل الدخول كـ **مستخدم عادي**.");
                 userMenu(scanner, borrowService, fineCalculator, bookService, user);
             } else {
-                System.out.println("❌ خطأ: لم يتم العثور على بيانات المستخدم.");
+                System.out.println("خطأ: لم يتم العثور على بيانات المستخدم.");
             }
         }
 
@@ -87,7 +93,7 @@ public class Main {
         String password = scanner.nextLine().trim();
 
         UserFileHandler.saveUser(email, password, "USER", null, name);
-        System.out.println("✅ تم تسجيل حسابك بنجاح. يمكنك الآن تسجيل الدخول.");
+        System.out.println("تم تسجيل حسابك بنجاح. يمكنك الآن تسجيل الدخول.");
     }
 
     private static User findUserByEmail(String email) {
@@ -98,7 +104,6 @@ public class Main {
                 .orElse(null);
     }
 
-    /** قائمة المستخدم العادي (User). */
     private static void userMenu(Scanner scanner, BorrowService borrowService, FineCalculator fineCalculator, BookService bookService, User user) {
         while (true) {
             System.out.println("\n=== User Menu ===");
@@ -110,15 +115,15 @@ public class Main {
             String choice = scanner.nextLine().trim();
 
             switch (choice) {
-                case "1" : {
+                case "1" -> {
                     System.out.println("=== استعارة كتاب ===");
-                    System.out.print("أدخل ISBN (رقم دولي معياري للكتاب) للبحث: ");
-                    String isbn = scanner.nextLine().trim();
+                    System.out.print("أدخل اسم الكتاب الذي تريد استعارته: ");
+                    String title = scanner.nextLine().trim();
 
-                    List<Book> matchingBooks = bookService.searchBooks(isbn);
+                    List<Book> matchingBooks = bookService.searchBooks(title);
 
                     if (matchingBooks.isEmpty()) {
-                        System.out.println("❌ خطأ: لم يتم العثور على كتاب بالـ ISBN المدخل.");
+                        System.out.println("خطأ: لم يتم العثور على كتاب بالعنوان المدخل.");
                         break;
                     }
 
@@ -126,23 +131,42 @@ public class Main {
 
                     try {
                         borrowService.borrowMedia(bookToBorrow, user);
-                        System.out.println("✅ تم استعارة كتاب: " + bookToBorrow.getTitle() + " بنجاح!");
+                        System.out.println("تم استعارة كتاب: " + bookToBorrow.getTitle() + " بنجاح!");
                     } catch (RuntimeException e) {
-                        System.out.println("❌ فشل الاستعارة: " + e.getMessage());
+                        System.out.println("فشل الاستعارة: " + e.getMessage());
                     }
-                    break;
                 }
-                case "2" : {
-                    System.out.print("Enter loan ID to return: ");
-                    String loanId = scanner.nextLine();
+                case "2" -> {
+
+                    List<Loan> userLoans = borrowService.getLoans().stream()
+                            .filter(loan -> loan.getUser().equals(user))
+                            .toList();
+
+                    if (userLoans.isEmpty()) {
+                        System.out.println("❌ لا توجد إعارات حالية للإرجاع.");
+                        break;
+                    }
+
+                    System.out.println("📋 قائمة الإعارات الحالية:");
+                    for (Loan loan : userLoans) {
+                        String mediaType = loan.getMedia() instanceof Book ? "Book" : "CD";
+                        String title = loan.getMedia() instanceof Book ? ((Book)loan.getMedia()).getTitle()
+                                : ((CD)loan.getMedia()).getTitle();
+                        System.out.println("- Loan ID: " + loan.getLoanId() + " | " + mediaType + ": " + title);
+                    }
+
+                    // 2️⃣ طلب Loan ID من المستخدم
+                    System.out.print("أدخل Loan ID للإرجاع: ");
+                    String loanId = scanner.nextLine().trim();
+
                     boolean returned = borrowService.returnLoan(loanId);
                     if (returned)
-                        System.out.println("✅ تم إرجاع الكتاب بنجاح!");
+                        System.out.println("✅ تم إرجاع العنصر بنجاح!");
                     else
                         System.out.println("❌ خطأ: رقم الإعارة غير صالح أو تم إرجاعه بالفعل.");
                     break;
                 }
-                case "3" : {
+                case "3" -> {
                     int fine = fineCalculator.calculateTotalFine(user);
                     if (fine > 0) {
                         System.out.println("You have " + fine + " NIS fine.");
@@ -154,45 +178,39 @@ public class Main {
                                     user.payFine(f);
                                 }
                             }
-                            System.out.println("✅ تم دفع جميع الغرامات بنجاح.");
+                            System.out.println("تم دفع جميع الغرامات بنجاح.");
                         } else {
                             System.out.println("Payment canceled.");
                         }
                     } else {
-                        System.out.println("✅ لا توجد غرامات مستحقة.");
+                        System.out.println("لا توجد غرامات مستحقة.");
                     }
-                    break;
                 }
-                case "4" : {
+                case "4" -> {
                     System.out.println("Goodbye, " + user.getName() + "!");
                     return;
                 }
-                default :  System.out.println("Invalid option. Try again.");
+                default -> System.out.println("Invalid option. Try again.");
             }
         }
     }
 
-    /** بيانات تجريبية لتجربة النظام. */
     private static void setupDemoData(BorrowService borrowService, BookService bookService) {
-        String demoEmail = "demo@example.com";
-        // 1. ضمان وجود المستخدم التجريبي
-        if (UserFileHandler.getUserByCredentials(demoEmail, "pass123") == null) {
-            UserFileHandler.saveUser(demoEmail, "pass123", "USER", "U001", "Demo User");
+        String demoEmail = "s12217424@stu.najah.edu";
+        if (UserFileHandler.getUserByCredentials(demoEmail, "er1234") == null) {
+            UserFileHandler.saveUser(demoEmail, "er1234", "USER", "U1A2F7", " صبا عبد  الجواد");
         }
 
-        // 2. ضمان وجود الكتاب التجريبي
         try {
             bookService.addBook("Demo Overdue Book", "Test Author", "999888777");
         } catch (IllegalArgumentException e) { }
 
-        // 3. إنشاء قرض متأخر
         User demoUser = findUserByEmail(demoEmail);
         Book demoBook = new Book("Demo Overdue Book", "Test Author", "999888777");
 
         LocalDate oldBorrowDate = LocalDate.now().minusDays(30);
 
-        // منع إضافة القرض التجريبي أكثر من مرة
-        if (borrowService.getLoans().stream().noneMatch(loan -> loan.getMedia().equals("DEMO_LOAN"))) {
+        if (borrowService.getLoans().stream().noneMatch(loan -> loan.getLoanId().equals("DEMO_LOAN"))) {
             if (demoUser != null) {
                 Loan demoLoan = new Loan("DEMO_LOAN", demoBook, demoUser, oldBorrowDate, oldBorrowDate.plusDays(28));
                 borrowService.addLoan(demoLoan);
