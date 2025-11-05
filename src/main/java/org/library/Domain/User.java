@@ -18,8 +18,20 @@ public class User {
     private final String name;
     private final String email;
     private boolean hasUnpaidFines;
-    private final List<Fine> fines = new ArrayList<>(); // جعل القائمة final
+    private List<Fine> fines = new ArrayList<>(); // جعل القائمة final
+    private String role; // "USER", "ADMIN", "SUPER_ADMIN"
 
+
+
+    public User(String id, String name, String email, String role) {
+        this.id = id;
+        this.name = name;
+        this.email = email;
+        this.role = role;
+    }
+
+    public String getRole() { return role; }
+    public void setRole(String role) { this.role = role; }
     /**
      * Constructor for User.
      */
@@ -40,6 +52,7 @@ public class User {
      * استرجاع قائمة الغرامات (قراءة فقط) لاستخدامها في FineCalculator.
      * @return قائمة غير قابلة للتعديل من الغرامات.
      */
+    
     public List<Fine> getFines() {
         return Collections.unmodifiableList(fines);
     }
@@ -106,12 +119,16 @@ public class User {
         if (this == obj) return true;
         if (obj == null || getClass() != obj.getClass()) return false;
         User user = (User) obj;
-        // يتم تعريف الكيان بالـ ID فقط
+
         return id.equals(user.id);
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(id);
+    }
+
+    public void setFines(List<Fine> fines) {
+        this.fines=fines;
     }
 }

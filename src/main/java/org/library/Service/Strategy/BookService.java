@@ -16,9 +16,9 @@ import java.util.stream.Collectors;
 
 public class BookService {
 
-    private List<Book> books;  // قائمة للـ DI (اختبارات موكد)
+    private List<Book> books;
 
-    // كونستركتور افتراضي: يستخدم القراءة من الملف
+
     public BookService() {
         this.books = null;  // null يعني استخدم الملفات
     }

@@ -1,14 +1,3 @@
-/**
-
- * @author Weam Ahmad
- * @author  Seba Abd Aljwwad
-
- */
-
-
-
-
-
 package org.library.Service.Strategy;
 
 import org.library.Domain.User;
@@ -19,14 +8,20 @@ import java.util.UUID;
 
 public class UserFileHandler {
     private static final String USERS_FILE = "users.txt";
-    private static final String ADMIN_EMAIL = "s12217663@stu.najah.edu";
 
-    /** يحفظ مستخدماً جديداً (أو مسؤولاً) في الملف. */
-    public static void saveUser(String email, String password, String role, String id, String name) {
-        if (role.equals("USER") && (id == null || id.isEmpty())) {
-            id = "U" + UUID.randomUUID().toString().substring(0, 5).toUpperCase();
-        } else if (role.equals("ADMIN")) {
-            id = "A001";
+    /** حفظ مستخدم جديد */
+    public static boolean saveUser(String email, String password, String role, String id, String name) {
+        // إذا الدور غير محدد أو ليس ADMIN، اعتبره USER
+        if (role == null || role.isEmpty() || !role.equalsIgnoreCase("ADMIN")) {
+            role = "USER";
+            if (id == null || id.isEmpty()) {
+                id = "U" + UUID.randomUUID().toString().substring(0, 5).toUpperCase();
+            }
+        } else if (role.equalsIgnoreCase("ADMIN")) {
+            // فقط Admin ثابت (A001, A002) مسموح لهم
+            if (id == null || id.isEmpty()) {
+                id = "A001"; // أو حسب الحاجة
+            }
         }
 
         // التنسيق: email,password,role,id,name
@@ -37,40 +32,43 @@ public class UserFileHandler {
             printWriter.println(userData);
         } catch (IOException e) {
             System.err.println("❌ خطأ أثناء حفظ بيانات المستخدم: " + e.getMessage());
+            return false;
         }
+        return true;
     }
 
-    /** يحمل جميع المستخدمين العاديين (Role=USER) من الملف. */
+    /** تحميل كل المستخدمين */
     public static List<User> loadAllUsers() {
         List<User> users = new ArrayList<>();
         try (BufferedReader reader = new BufferedReader(new FileReader(USERS_FILE))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 String[] parts = line.split(",");
-                if (parts.length >= 5 && parts[2].equals("USER")) {
+                if (parts.length >= 5) {
                     String email = parts[0];
+                    String role = parts[2];
                     String id = parts[3];
                     String name = parts[4];
-                    users.add(new User(id, name, email));
+                    users.add(new User(id, name, email, role)); // ← إضافة role هنا
                 }
             }
-        } catch (FileNotFoundException e) { }
-        catch (IOException e) {
+        } catch (IOException e) {
             System.err.println("❌ خطأ أثناء قراءة ملف المستخدمين: " + e.getMessage());
         }
         return users;
     }
 
-    /** يتحقق من بيانات الدخول ويعيد الإيميل في حال النجاح. */
-    public static String getUserByCredentials(String email, String password) {
+    /** تحقق من بيانات الدخول */
+    public static User getUserByCredentials(String email, String password) {
         try (BufferedReader reader = new BufferedReader(new FileReader(USERS_FILE))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 String[] parts = line.split(",");
-                if (parts.length >= 2) {
-                    if (parts[0].equals(email) && parts[1].equals(password)) {
-                        return email;
-                    }
+                if (parts.length >= 5 && parts[0].equals(email) && parts[1].equals(password)) {
+                    String role = parts[2];
+                    String id = parts[3];
+                    String name = parts[4];
+                    return new User(id, name, email, role);
                 }
             }
         } catch (IOException e) {
@@ -79,13 +77,24 @@ public class UserFileHandler {
         return null;
     }
 
-    /** يتحقق مما إذا كان الإيميل خاصاً بالمسؤول. */
-    public static boolean isAdmin(String email) {
-        return ADMIN_EMAIL.equals(email);
+
+
+    /** الحصول على دور المستخدم */
+    public static String getUserRole(String email) {
+        try (BufferedReader reader = new BufferedReader(new FileReader(USERS_FILE))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] parts = line.split(",");
+                if (parts.length >= 3 && parts[0].equals(email)) {
+                    return parts[2];
+                }
+            }
+        } catch (IOException e) { }
+        return null;
     }
 
-    /** يحذف مستخدماً من الملف بناءً على الـ ID الخاص به. */
-    public static boolean removeUserById(String userId) {
+    /** حذف مستخدم بالـ ID مع التحقق من الدور */
+    public static boolean removeUserById(String userId, String requesterRole) {
         List<String> updatedLines = new ArrayList<>();
         boolean removed = false;
 
@@ -93,28 +102,29 @@ public class UserFileHandler {
             String line;
             while ((line = reader.readLine()) != null) {
                 String[] parts = line.split(",");
-                // التحقق من ID المستخدم وأن دوره USER (لتجنب حذف الأدمن)
-                if (parts.length >= 4 && parts[3].equals(userId) && parts[2].equals("USER")) {
-                    removed = true;
+                if (parts.length >= 5 && parts[3].equals(userId)) {
+                    String targetRole = parts[2];
+                    if ("SUPER_ADMIN".equals(targetRole) && !"SUPER_ADMIN".equals(requesterRole)) {
+                        updatedLines.add(line); // لا يسمح بحذف Super Admin إلا من قبل Super Admin
+                    } else if ("ADMIN".equals(targetRole) && "ADMIN".equals(requesterRole)) {
+                        updatedLines.add(line); // Admin لا يحذف Admin آخر
+                    } else {
+                        removed = true;
+                    }
                 } else {
                     updatedLines.add(line);
                 }
             }
         } catch (IOException e) {
-            System.err.println("❌ خطأ أثناء قراءة ملف المستخدمين للحذف: " + e.getMessage());
+            System.err.println("❌ خطأ أثناء قراءة الملف: " + e.getMessage());
             return false;
         }
 
         if (removed) {
-            // إعادة كتابة الملف بالقائمة المحدثة
-            try (FileWriter writer = new FileWriter(USERS_FILE, false);
-                 PrintWriter printWriter = new PrintWriter(writer)) {
-
-                for (String line : updatedLines) {
-                    printWriter.println(line);
-                }
+            try (PrintWriter writer = new PrintWriter(new FileWriter(USERS_FILE, false))) {
+                for (String l : updatedLines) writer.println(l);
             } catch (IOException e) {
-                System.err.println("❌ خطأ أثناء إعادة كتابة ملف المستخدمين بعد الحذف: " + e.getMessage());
+                System.err.println("❌ خطأ أثناء إعادة كتابة الملف: " + e.getMessage());
                 return false;
             }
         }

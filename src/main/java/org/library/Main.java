@@ -13,7 +13,7 @@ import java.util.Scanner;
 public class Main {
 
     public static void main(String[] args) {
-        // إجبار الـ Console على UTF-8
+
         try {
             System.setOut(new PrintStream(System.out, true, "UTF-8"));
         } catch (UnsupportedEncodingException e) {
@@ -22,7 +22,7 @@ public class Main {
 
         Scanner scanner = new Scanner(System.in);
 
-        // ===== إعداد الخدمات (Dependency Injection) =====
+        // ===== إعداد الخدمات =====
         RealEmailServer realEmailServer = new RealEmailServer();
         EmailNotifier emailNotifier = new EmailNotifier(realEmailServer);
         BorrowService borrowService = new BorrowService(emailNotifier);
@@ -35,53 +35,69 @@ public class Main {
 
         System.out.println("=== Library Management System ===");
 
-        String loggedInEmail = null;
+        boolean exitProgram = false;
 
-        while (loggedInEmail == null) {
-            System.out.print("\nهل لديك حساب مسجل بالفعل؟ (نعم/لا/خروج): ");
-            String response = scanner.nextLine().trim();
+        while (!exitProgram) {  // ← الحلقة الرئيسية
+            String loggedInEmail = null;
 
-            if (response.equalsIgnoreCase("نعم")) {
-                System.out.print("أدخل بريدك الإلكتروني: ");
-                String email = scanner.nextLine().trim();
-                System.out.print("أدخل كلمة المرور: ");
-                String password = scanner.nextLine().trim();
+            while (loggedInEmail == null) {
+                System.out.print("\nهل لديك حساب مسجل بالفعل؟ (نعم/لا/خروج): ");
+                String response = scanner.nextLine().trim();
 
-                if (authAdmin.login(email, password)) {
-                    loggedInEmail = email;
-                    System.out.println(authAdmin.getErrorMessage());
+                if (response.equalsIgnoreCase("نعم")) {
+                    System.out.print("أدخل بريدك الإلكتروني: ");
+                    String email = scanner.nextLine().trim();
+                    System.out.print("أدخل كلمة المرور: ");
+                    String password = scanner.nextLine().trim();
+
+                    if (authAdmin.login(email, password)) {
+                        loggedInEmail = email;
+                        System.out.println(authAdmin.getErrorMessage());
+                    } else {
+                        System.out.println("خطأ: البريد الإلكتروني أو كلمة المرور غير صحيحة.");
+                    }
+
+                } else if (response.equalsIgnoreCase("لا")) {
+                    registerUserInteractive(scanner);
+
+                } else if (response.equalsIgnoreCase("خروج")) {
+                    exitProgram = true;
+                    break;
                 } else {
-                    System.out.println("خطأ: البريد الإلكتروني أو كلمة المرور غير صحيحة.");
+                    System.out.println("إجابة غير صالحة. يرجى إدخال (نعم/لا/خروج).");
                 }
-
-            } else if (response.equalsIgnoreCase("لا")) {
-                registerUserInteractive(scanner);
-
-            } else if (response.equalsIgnoreCase("خروج")) {
-                System.out.println("Exiting...");
-                scanner.close();
-                return;
-            } else {
-                System.out.println("إجابة غير صالحة. يرجى إدخال (نعم/لا/خروج).");
             }
-        }
 
-        if (authAdmin.isLoggedInAdmin()) {
-            System.out.println("\nتم تسجيل الدخول كـ **مدير**.");
-            authAdmin.showAdminMenu(scanner);
-        } else {
-            User user = findUserByEmail(loggedInEmail);
-            if (user != null) {
-                System.out.println("\nتم تسجيل الدخول كـ **مستخدم عادي**.");
-                userMenu(scanner, borrowService, fineCalculator, bookService, user);
+            if (exitProgram) break;
+
+            if (authAdmin.isSuperAdmin()) {
+                System.out.println("\nتم تسجيل الدخول كـ **مدير أعلى (SUPER ADMIN)**.");
+                authAdmin.showAdminMenu(scanner); // تشمل كل الخيارات
+            } else if (authAdmin.isLoggedInAdmin()) {
+                System.out.println("\nتم تسجيل الدخول كـ **مدير عادي (ADMIN)**.");
+                authAdmin.showAdminMenu(scanner); // تشمل خيارات المدير العادي فقط
+            } else if (authAdmin.isLoggedInUser()) {
+                User user = findUserByEmail(loggedInEmail);
+                if (user != null) {
+                    System.out.println("\nتم تسجيل الدخول كـ **مستخدم عادي**.");
+                    userMenu(scanner, borrowService, fineCalculator, bookService, user);
+                } else {
+                    System.out.println("خطأ: لم يتم العثور على بيانات المستخدم.");
+                }
             } else {
-                System.out.println("خطأ: لم يتم العثور على بيانات المستخدم.");
+                System.out.println("❌ خطأ: لم يتم التعرف على الدور.");
             }
+
+
+
+            // بعد انتهاء أي جلسة، يعود البرنامج للحلقة الرئيسية لتسجيل الدخول مرة أخرى
+            System.out.println("\n=== العودة إلى شاشة تسجيل الدخول ===");
         }
 
         scanner.close();
         System.out.println("System exited.");
     }
+
 
     private static void registerUserInteractive(Scanner scanner) {
         System.out.println("\n=== تسجيل مستخدم جديد ===");
@@ -167,25 +183,36 @@ public class Main {
                     break;
                 }
                 case "3" -> {
+
+                    FineFileManager.loadFines(user);
+
                     int fine = fineCalculator.calculateTotalFine(user);
                     if (fine > 0) {
-                        System.out.println("You have " + fine + " NIS fine.");
-                        System.out.print("Pay now? (y/n): ");
-                        String pay = scanner.nextLine().toLowerCase();
+                        System.out.println("لديك " + fine + " شيكل كغرامة مستحقة.");
+                        System.out.print("هل تريد الدفع الآن؟ (y/n): ");
+                        String pay = scanner.nextLine().trim().toLowerCase();
+
                         if (pay.equals("y")) {
+
                             for (Fine f : user.getFines()) {
                                 if (!f.isPaid()) {
                                     user.payFine(f);
                                 }
                             }
-                            System.out.println("تم دفع جميع الغرامات بنجاح.");
+
+
+                            FineFileManager.removePaidFines(user);
+                            System.out.println("ادخل رقم حساب البطاقة البنكية: ");
+                            String bank = scanner.nextLine().trim().toLowerCase();
+                            System.out.println("✅ تم دفع جميع الغرامات ");
                         } else {
-                            System.out.println("Payment canceled.");
+                            System.out.println("تم إلغاء الدفع.");
                         }
                     } else {
                         System.out.println("لا توجد غرامات مستحقة.");
                     }
                 }
+
                 case "4" -> {
                     System.out.println("Goodbye, " + user.getName() + "!");
                     return;

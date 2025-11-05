@@ -52,22 +52,34 @@ public class BorrowService {
     public int returnMedia(String loanId) {
         List<Loan> activeLoans = getLoans();
 
+
         Loan loan = activeLoans.stream()
                 .filter(l -> l.getLoanId().equals(loanId))
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Loan not found in active loans."));
 
+
         activeLoans.remove(loan);
-        int fineAmount = calculateFineForLoan(loan);
-        loanFileHandler.rewriteAllLoans(activeLoans); // ← استخدم الـ dependency
+
+
+        loanFileHandler.rewriteAllLoans(activeLoans);
+
+
         loan.getMedia().setAvailable(true);
 
+
+        int fineAmount = calculateFineForLoan(loan);
+
         if (fineAmount > 0) {
-            loan.getUser().addFine(new Fine(fineAmount));
+            Fine fine = new Fine(fineAmount);
+
+            FineFileManager.addFineForUser(loan.getUser(), fine);
+            System.out.println("⚠️ تم إضافة غرامة للمستخدم: " + fineAmount + " NIS");
         }
 
         return fineAmount;
     }
+
 
     public boolean hasActiveLoans(User user) {
         return getLoans().stream().anyMatch(l -> l.getUser().equals(user));

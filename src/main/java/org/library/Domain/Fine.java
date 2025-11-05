@@ -10,26 +10,33 @@ import java.util.Objects;
  */
 public class Fine {
     private final int amount;  // NIS
-    private boolean paid;  // Status
+    private boolean paid;      // Status
 
     /**
-     * Constructor.
-     * @param amount the fine amount
+     * Constructor for new unpaid fine.
      */
     public Fine(int amount) {
         this.amount = amount;
         this.paid = false;
     }
 
+    /**
+     * Constructor for loaded fine (from file).
+     */
+    public Fine(int amount, boolean paid) {
+        this.amount = amount;
+        this.paid = paid;
+    }
+
     public int getAmount() { return amount; }
     public boolean isPaid() { return paid; }
 
     /**
-     * Mark as paid (US2.3 partial/full).
-     * @param paid true if paid
+     * Mark as paid.
      */
-    public void setPaid(boolean paid)
-    { this.paid = paid; }
+    public void setPaid(boolean paid) {
+        this.paid = paid;
+    }
 
     @Override
     public boolean equals(Object o) {

@@ -20,7 +20,7 @@ public class FineCalculator {
     }
 
     /**
-     * Calculate total fine for user (US5.3: accurate across media types).
+
      * @param user the user
      * @return total NIS
      */

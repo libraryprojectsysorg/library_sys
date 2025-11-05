@@ -1,46 +1,34 @@
-/**
- * @author Weam Ahmad
- * @author  Seba Abd Aljwwad
-
-
- */
-
 package org.library.Service.Strategy;
 
-import org.library.Domain.Book;
-import org.library.Domain.User;
-import org.library.Service.Strategy.*;
-import org.library.Domain.CD;
+import org.library.Domain.*;
 import org.library.Service.Strategy.fines.FineCalculator;
-
 import java.util.List;
 import java.util.Scanner;
 import io.github.cdimascio.dotenv.Dotenv;
+
 public class AuthAdmin {
 
     private final List<User> users;
-    public boolean isLoggedIn = false;
+    private boolean isLoggedIn = false;
     private String loggedInEmail = null;
+    private Role loggedInRole = null;
 
     private final BookService bookService;
     private final BorrowService borrowService;
     private final ReminderService reminderService;
     private final FineCalculator fineCalculator;
-    private static final Dotenv dotenv = Dotenv.load();
-    private static final String ADMIN_EMAIL = dotenv.get("ADMIN_EMAIL");
-    private static final String ADMIN_PASS = dotenv.get("ADMIN_PASS");
 
+    private static final Dotenv dotenv = Dotenv.load();
+    private static final String SUPER_ADMIN_EMAIL = dotenv.get("ADMIN_EMAIL");
+    private static final String SUPER_ADMIN_PASS = dotenv.get("ADMIN_PASS");
+
+    public enum Role { SUPER_ADMIN, ADMIN ,USER}
 
     public AuthAdmin(BorrowService borrowService, ReminderService reminderService, FineCalculator fineCalculator, BookService bookService) {
-
-        // 1. ضمان وجود الأدمن في الملف
-        if (UserFileHandler.getUserByCredentials(ADMIN_EMAIL, ADMIN_PASS) == null) {
-            UserFileHandler.saveUser(ADMIN_EMAIL, ADMIN_PASS, "ADMIN", "A001", "Library Admin");
+        if (UserFileHandler.getUserByCredentials(SUPER_ADMIN_EMAIL, SUPER_ADMIN_PASS) == null) {
+            UserFileHandler.saveUser(SUPER_ADMIN_EMAIL, SUPER_ADMIN_PASS, "SUPER_ADMIN", "SA001", "Library Super Admin");
         }
-
-        // 2. تحميل المستخدمين العاديين من الملف
         this.users = UserFileHandler.loadAllUsers();
-
         this.borrowService = borrowService;
         this.reminderService = reminderService;
         this.fineCalculator = fineCalculator;
@@ -48,34 +36,36 @@ public class AuthAdmin {
     }
 
     public boolean login(String email, String password) {
-        if (email == null || password == null || email.isEmpty() || password.isEmpty()) {
-            return false;
-        }
-
-        String foundEmail = UserFileHandler.getUserByCredentials(email, password);
-
-        if (foundEmail != null) {
+        User user = UserFileHandler.getUserByCredentials(email, password);
+        if (user != null) {
             isLoggedIn = true;
-            loggedInEmail = foundEmail;
+            loggedInEmail = email;
+            loggedInRole = user.getRole().equalsIgnoreCase("SUPER_ADMIN") ? Role.SUPER_ADMIN
+                    : user.getRole().equalsIgnoreCase("ADMIN") ? Role.ADMIN
+              : user.getRole().equalsIgnoreCase("USER") ? Role.USER : null;
             return true;
         }
         return false;
     }
-
     public boolean isLoggedInAdmin() {
-        return isLoggedIn && UserFileHandler.isAdmin(loggedInEmail);
+        return isLoggedIn && (loggedInRole == Role.SUPER_ADMIN || loggedInRole == Role.ADMIN);
     }
 
+    public boolean isSuperAdmin() {
+        return isLoggedIn && loggedInRole == Role.SUPER_ADMIN;
+    }
+    public boolean isLoggedInUser() {
+        return isLoggedIn && (loggedInRole == Role.USER || loggedInRole == Role.USER);
+    }
     public String getErrorMessage() {
-        if (!isLoggedIn) {
-            return "Invalid credentials - please try again.";
-        }
+        if (!isLoggedIn) return "Invalid credentials - please try again.";
         return "Login successful";
     }
 
     public void logout() {
         isLoggedIn = false;
         loggedInEmail = null;
+        loggedInRole = null;
     }
 
     public void showAdminMenu(Scanner scanner) {
@@ -85,196 +75,170 @@ public class AuthAdmin {
         }
 
         while (isLoggedIn) {
-
+            System.out.println("\n=== Admin Menu ===");
             System.out.println("1. Add Book");
             System.out.println("2. Delete Book");
             System.out.println("3. View All Books");
             System.out.println("4. Add CD");
             System.out.println("5. Delete CD");
             System.out.println("6. View All CDs");
-            System.out.println("7. Send Overdue Reminders (US3.1)");
-            System.out.println("8. Unregister User (US4.2)");
-            System.out.println("9. Fine Summary (US5.3)");
-            System.out.println("10. Logout (US1.2)");
+            System.out.println("7. Send Overdue Reminders");
+
+            if (isSuperAdmin()) {
+                System.out.println("8. Add Admin");
+                System.out.println("9. Delete Admin");
+                System.out.println("10. Unregister User");
+                System.out.println("11. Fine Summary");
+                System.out.println("12. Logout");
+            } else {
+                System.out.println("8. Fine Summary");
+                System.out.println("9. Logout");
+            }
+
             System.out.print("Choose option: ");
-             int choice;
-            try {
-                if (!scanner.hasNextLine()) {
-                    System.out.println("No input. Exiting menu.");
-                    break;
-                }
-                choice = Integer.parseInt(scanner.nextLine().trim());
-            } catch (Exception e) {
-                System.out.println("Invalid input. Please enter a number.");
-                continue;
-            }
+            int choice;
+            try { choice = Integer.parseInt(scanner.nextLine().trim()); }
+            catch (Exception e) { System.out.println("Invalid input."); continue; }
 
-            switch (choice) {
-                case 1: addBookInteractive(scanner); break;
-                case 2: deleteBookInteractive(scanner); break;
-                case 3: viewAllBooks(); break;
-                case 4: addCDInteractive(scanner); break;
-                case 5: deleteCDInteractive(scanner); break;
-                case 6: viewAllCDs(); break;
-
-                case 7:
-                    System.out.print("أدخل الإيميل الذي تريد إرسال رسالة له: ");
-                    String targetEmail = scanner.nextLine().trim();
-
-                    User targetUser = users.stream()
-                            .filter(u -> u.getEmail().equalsIgnoreCase(targetEmail))
-                            .findFirst()
-                            .orElse(null);
-                    if (targetUser == null) {
-                        System.out.println("❌ المستخدم غير موجود.");
-                        break;
-                    }
-                    int totalFine = fineCalculator.calculateTotalFine(targetUser);
-
-                    if (totalFine == 0) {
-                        System.out.println("✅ المستخدم ليس لديه أي غرامات مستحقة.");
-                        break;
-                    }
-                    String messageContent = "يجب عليك دفع الغرامة المالية التي قدرها "
-                            + totalFine + " شيكل بسبب تأخير إعادة الوسائط.";
-
-
-                    RealEmailServer realEmailServer = new RealEmailServer();
-                    EmailNotifier emailNotifier = new EmailNotifier(realEmailServer);
-                    emailNotifier.notify(targetUser, messageContent);
-
-                    System.out.println("✅ تم إرسال البريد الإلكتروني بنجاح إلى " + targetEmail);
-                    break;
-
-                case 8: // Unregister user
-                    System.out.print("Enter user ID to unregister: ");
-                    if (!scanner.hasNextLine()) break;
-                    String userId = scanner.nextLine().trim();
-                    User user = findUserById(userId);
-
-                    if (user == null) {
-                        System.out.println("❌ المستخدم ذي الـ ID " + userId + " غير موجود.");
-                        break;
-                    }
-
-                    if (borrowService.hasActiveLoans(user) || user.hasUnpaidFines()) {
-                        System.out.println("⚠️ لا يمكن إلغاء التسجيل: للمستخدم قروض نشطة أو غرامات غير مدفوعة.");
-                        break;
-                    }
-
-                    borrowService.unregisterUser(userId);
-                    this.users.remove(user);
-                    boolean removedFromFile = UserFileHandler.removeUserById(userId);
-                    System.out.println(removedFromFile ?
-                            "✅ تم إلغاء تسجيل المستخدم بنجاح!" :
-                            "❌ خطأ: فشل في حذف المستخدم من الملف.");
-                    break;
-
-                case 9: // Fine summary
-                    System.out.print("Enter user ID for fine summary: ");
-                    if (!scanner.hasNextLine()) break;
-                    userId = scanner.nextLine().trim();
-                    user = findUserById(userId);
-                    if (user == null) {
-                        System.out.println("User not found.");
-                        break;
-                    }
-                    int total = fineCalculator.calculateTotalFine(user);
-                    System.out.println("إجمالي الغرامات المستحقة: " + total + " NIS.");
-                    break;
-
-                case 10: logout(); System.out.println("Logged out."); break;
-
-                default: System.out.println("Invalid option. Try again."); break;
-            }
+            if (isSuperAdmin()) handleSuperAdminChoice(choice, scanner);
+            else handleAdminChoice(choice, scanner);
         }
     }
 
-
-    private User findUserById(String id) {
-        return users.stream()
-                .filter(u -> u.getId().equals(id))
-                .findFirst()
-                .orElse(null);
+    private void handleSuperAdminChoice(int choice, Scanner scanner) {
+        switch (choice) {
+            case 1 -> addBookInteractive(scanner);
+            case 2 -> deleteBookInteractive(scanner);
+            case 3 -> viewAllBooks();
+            case 4 -> addCDInteractive(scanner);
+            case 5 -> deleteCDInteractive(scanner);
+            case 6 -> viewAllCDs();
+            case 7 -> sendOverdueRemindersInteractive(scanner);
+            case 8 -> addAdminInteractive(scanner);
+            case 9 -> deleteAdminInteractive(scanner);
+            case 10 -> unregisterUserInteractive(scanner);
+            case 11 -> fineSummaryInteractive(scanner);
+            case 12 -> { logout(); System.out.println("Logged out."); }
+            default -> System.out.println("Invalid option.");
+        }
     }
 
+    private void handleAdminChoice(int choice, Scanner scanner) {
+        switch (choice) {
+            case 1 -> addBookInteractive(scanner);
+            case 2 -> deleteBookInteractive(scanner);
+            case 3 -> viewAllBooks();
+            case 4 -> addCDInteractive(scanner);
+            case 5 -> deleteCDInteractive(scanner);
+            case 6 -> viewAllCDs();
+            case 7 -> sendOverdueRemindersInteractive(scanner);
+            case 8 -> fineSummaryInteractive(scanner);
+            case 9 -> { logout(); System.out.println("Logged out."); }
+            default -> System.out.println("Invalid option.");
+        }
+
+    }
+
+    // ======== العمليات ========
+    private void addAdminInteractive(Scanner scanner) {
+        System.out.print("Email: "); String email = scanner.nextLine().trim();
+        System.out.print("Password: "); String pass = scanner.nextLine().trim();
+        System.out.print("ID: "); String id = scanner.nextLine().trim();
+        System.out.print("Full Name: "); String name = scanner.nextLine().trim();
+        boolean added = UserFileHandler.saveUser(email, pass, "ADMIN", id, name);
+        System.out.println(added ? "✅ Admin added!" : "❌ Failed to add admin.");
+    }
+
+    private void deleteAdminInteractive(Scanner scanner) {
+        System.out.print("Enter Admin ID to delete: "); String id = scanner.nextLine().trim();
+        User user = findUserById(id);
+        if (user == null || !user.getRole().equalsIgnoreCase("ADMIN")) { System.out.println("❌ Not found."); return; }
+        boolean removed = UserFileHandler.removeUserById(id, loggedInRole.name());
+        System.out.println(removed ? "✅ Admin deleted." : "❌ Failed.");
+        users.remove(user);
+    }
+
+    private void unregisterUserInteractive(Scanner scanner) {
+        System.out.print("Enter user ID to unregister: ");
+        String userId = scanner.nextLine().trim();
+        User user = findUserById(userId);
+        if (user == null || user.getRole().equalsIgnoreCase("SUPER_ADMIN") || user.getRole().equalsIgnoreCase("ADMIN")) {
+            System.out.println("❌ Cannot unregister this user."); return;
+        }
+        if (borrowService.hasActiveLoans(user) || user.hasUnpaidFines()) {
+            System.out.println("⚠️ Cannot unregister: active loans or unpaid fines."); return;
+        }
+        borrowService.unregisterUser(userId);
+        boolean removedFromFile = UserFileHandler.removeUserById(userId, loggedInRole.name());
+        System.out.println(removedFromFile ? "✅ User unregistered." : "❌ Failed.");
+        users.remove(user);
+    }
+
+    private void fineSummaryInteractive(Scanner scanner) {
+        System.out.print("Enter user ID: ");
+        String userId = scanner.nextLine().trim();
+        User user = findUserById(userId);
+        if (user == null) { System.out.println("User not found."); return; }
+        FineFileManager.loadFines(user);
+        int total = fineCalculator.calculateTotalFine(user);
+        System.out.println("إجمالي الغرامات المستحقة: " + total + " NIS.");
+    }
+
+    private void sendOverdueRemindersInteractive(Scanner scanner) {
+        System.out.print("Enter user email to send reminder: ");
+        String email = scanner.nextLine().trim();
+        User targetUser = users.stream().filter(u -> u.getEmail().equalsIgnoreCase(email)).findFirst().orElse(null);
+        if (targetUser == null) { System.out.println("❌ User not found."); return; }
+        FineFileManager.loadFines(targetUser);
+        int totalFine = fineCalculator.calculateTotalFine(targetUser);
+        if (totalFine == 0) { System.out.println("✅ No fines."); return; }
+        String message = "يجب عليك دفع الغرامة المالية التي قدرها " + totalFine + " شيكل.";
+        new EmailNotifier(new RealEmailServer()).notify(targetUser, message);
+        System.out.println("✅ Email sent.");
+    }
+
+    // ======== Books & CDs ========
     public void addBookInteractive(Scanner scanner) {
-        System.out.print("Enter book title: ");
-        String title = scanner.nextLine().trim();
-        System.out.print("Enter author name: ");
-        String author = scanner.nextLine().trim();
-        System.out.print("Enter ISBN: ");
-        String isbn = scanner.nextLine().trim();
-
-        try {
-            boolean added = bookService.addBook(title, author, isbn);
-            if (added) System.out.println("✅ Book added successfully!");
-            else System.out.println("⚠️ A book with this ISBN already exists.");
-        } catch (IllegalArgumentException e) {
-            System.out.println("❌ Invalid book details. Please try again.");
-        }
-    }
-    public void addCDInteractive(Scanner scanner) {
-        System.out.print("Enter CD code (ISBN/ID): ");
-        String isbn = scanner.nextLine().trim();
-        System.out.print("Enter CD title: ");
-        String title = scanner.nextLine().trim();
-        System.out.print("Enter CD author/artist: ");
-        String author = scanner.nextLine().trim();
-
-        try {
-            boolean added = CDFileHandler.saveCD(new CD( title, author,isbn));
-            if (added) System.out.println("✅ CD added successfully!");
-            else System.out.println("⚠ A CD with this code already exists.");
-        } catch (IllegalArgumentException e) {
-            System.out.println("❌ Invalid CD details. Please try again.");
-        }
-    }
-
-    public void deleteCDInteractive(Scanner scanner) {
-        System.out.print("Enter CD code to delete: ");
-        String code = scanner.nextLine().trim();
-
-        boolean removed = CDFileHandler.removeCDByCode(code);
-        if (removed) System.out.println("✅ CD deleted successfully!");
-        else System.out.println("❌ No CD found with that code.");
-    }
-
-    public void viewAllCDs() {
-        List<CD> allCDs = CDFileHandler.loadAllCDs();
-        if (allCDs.isEmpty()) {
-            System.out.println("📀 No CDs found.");
-            return;
-        }
-        System.out.println("=== All CDs ===");
-        for (CD cd : allCDs) {
-            System.out.println("- Code: " + cd.getIsbn() + " | Title: " + cd.getTitle() + " | Author/Artist: " + cd.getAuthor());
-        }
+        System.out.print("Book title: "); String title = scanner.nextLine().trim();
+        System.out.print("Author: "); String author = scanner.nextLine().trim();
+        System.out.print("ISBN: "); String isbn = scanner.nextLine().trim();
+        boolean added = bookService.addBook(title, author, isbn);
+        System.out.println(added ? "✅ Book added!" : "⚠️ Already exists.");
     }
 
     public void deleteBookInteractive(Scanner scanner) {
-        System.out.print("Enter ISBN of the book to delete: ");
-        String isbn = scanner.nextLine().trim();
-
-        List<Book> matches = bookService.searchBooks(isbn);
-        if (matches.isEmpty()) {
-            System.out.println("⚠️ No book found with that ISBN.");
-            return;
-        }
-
-        Book book = matches.get(0);
+        System.out.print("ISBN to delete: "); String isbn = scanner.nextLine().trim();
         boolean removed = bookService.removeByIsbn(isbn);
-        if (removed) System.out.println("✅ Book deleted: " + book.getTitle());
-        else System.out.println("❌ Failed to delete book.");
+        System.out.println(removed ? "✅ Book deleted." : "❌ Not found.");
     }
 
     public void viewAllBooks() {
         List<Book> all = bookService.searchBooks("");
-        if (all.isEmpty()) {
-            System.out.println("📚 No books found.");
-            return;
-        }
-        System.out.println("=== All Books ===");
+        if (all.isEmpty()) { System.out.println("📚 No books."); return; }
         all.forEach(b -> System.out.println("- " + b.getTitle() + " by " + b.getAuthor() + " (ISBN: " + b.getIsbn() + ")"));
+    }
+
+    public void addCDInteractive(Scanner scanner) {
+        System.out.print("CD code: "); String code = scanner.nextLine().trim();
+        System.out.print("CD title: "); String title = scanner.nextLine().trim();
+        System.out.print("CD author/artist: "); String author = scanner.nextLine().trim();
+        boolean added = CDFileHandler.saveCD(new CD(title, author, code));
+        System.out.println(added ? "✅ CD added!" : "⚠️ Already exists.");
+    }
+
+    public void deleteCDInteractive(Scanner scanner) {
+        System.out.print("CD code to delete: "); String code = scanner.nextLine().trim();
+        boolean removed = CDFileHandler.removeCDByCode(code);
+        System.out.println(removed ? "✅ CD deleted!" : "❌ Not found.");
+    }
+
+    public void viewAllCDs() {
+        List<CD> allCDs = CDFileHandler.loadAllCDs();
+        if (allCDs.isEmpty()) { System.out.println("📀 No CDs."); return; }
+        allCDs.forEach(cd -> System.out.println("- " + cd.getTitle() + " by " + cd.getAuthor() + " (Code: " + cd.getIsbn() + ")"));
+    }
+
+    private User findUserById(String id) {
+        return users.stream().filter(u -> u.getId().equals(id)).findFirst().orElse(null);
     }
 }
