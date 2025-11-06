@@ -1,37 +1,52 @@
+// File: org.library.Service.Strategy.fines.FineCalculator.java
+
 package org.library.Service.Strategy.fines;
 
-import org.library.Service.Strategy.BorrowService;
+// تأكد من استيراد الكلاسات Domain
+import org.library.Domain.Book;
+import org.library.Domain.CD;
 import org.library.Domain.Loan;
 import org.library.Domain.User;
+import org.library.Service.Strategy.BorrowService;
 
 import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
 
-/**
- * Service for fine calculation (Sprint 5: Strategy + mixed media).
- * @author Weam Ahmad
- * @author  Seba Abd Aljwwad
- * @version 1.0
- */
 public class FineCalculator {
-    private BorrowService borrowService;
+    private final BorrowService borrowService;
 
     public FineCalculator(BorrowService borrowService) {
         this.borrowService = borrowService;
     }
 
     /**
-
      * @param user the user
      * @return total NIS
      */
     public int calculateTotalFine(User user) {
         int total = 0;
-        for (Loan loan : borrowService.getLoans()) {  // أو stream()
+        LocalDate today = LocalDate.now();
+        String userRole = user.getRole(); // نحصل على الدور مرة واحدة
+
+        for (Loan loan : borrowService.getLoans()) {
             if (loan.getUser().equals(user) && borrowService.isOverdue(loan)) {
-                int overdueDays = (int) java.time.temporal.ChronoUnit.DAYS.between(loan.getDueDate(), LocalDate.now());
-                total += loan.getMedia().getFineStrategy().calculateFine(overdueDays);
+
+                long overdueDays = ChronoUnit.DAYS.between(loan.getDueDate(), today);
+                int dailyFineRate = 0;
+
+                // تحديد السعر اليومي بناءً على نوع المادة (Book/CD) والدور
+                if (loan.getMedia() instanceof Book book) {
+                    dailyFineRate = book.getDailyFineRate(userRole);
+                } else if (loan.getMedia() instanceof CD cd) {
+                    dailyFineRate = cd.getDailyFineRate(userRole);
+                }
+
+                if (overdueDays > 0 && dailyFineRate > 0) {
+                    total += (int) (overdueDays * dailyFineRate);
+                }
             }
         }
+
         return total;
     }
 }

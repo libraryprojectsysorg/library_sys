@@ -60,4 +60,9 @@ public abstract class Media {
 
     public boolean isAvailable() { return available; }
     public void setAvailable(boolean available) { this.available = available; }
+
+
+    public abstract int getDailyFineRate(String userRole);
+
+
 }

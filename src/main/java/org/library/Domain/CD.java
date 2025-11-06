@@ -26,7 +26,7 @@ public class CD extends Media {
      */
     @Override
     public int getLoanDays() {
-        return 7;
+        return 1;
     }
 
     /**
@@ -35,5 +35,13 @@ public class CD extends Media {
     @Override
     public FineStrategy getFineStrategy() {
         return new CDFineStrategy();
+    }
+
+
+    @Override
+    public int getDailyFineRate(String userRole) {
+        if ("SUPER_ADMIN".equalsIgnoreCase(userRole)) return 0;
+        if ("LIBRARIAN".equalsIgnoreCase(userRole) || "ADMIN".equalsIgnoreCase(userRole)) return 10;
+        return 20; // Default (User)
     }
 }
