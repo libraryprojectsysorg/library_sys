@@ -6,7 +6,7 @@ import org.library.Domain.User;
 import java.util.List;
 
 /**
- * Service for reminders using Observer (Sprint 3).
+
  * @author Weam Ahmad
  * @author  Seba Abd Aljwwad
  * @version 1.0
@@ -16,8 +16,8 @@ public class ReminderService {
     private final BorrowService borrowService;
 
     /**
-     * Constructor.
-     * @param notifiers list of observers (e.g., EmailNotifier)
+
+     * @param notifiers list of observers .
      * @param borrowService for overdue data
      */
     public ReminderService(List<Observer> notifiers, BorrowService borrowService) {

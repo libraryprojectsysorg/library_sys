@@ -39,4 +39,13 @@ public class Book extends Media {  // Extend Media for Sprint 5 polymorphism
     {
         return new BookFineStrategy();  // 10 NIS/day
     }
+
+    @Override
+    public int getDailyFineRate(String userRole) {
+        if ("SUPER_ADMIN".equalsIgnoreCase(userRole)) return 0;
+        if ("LIBRARIAN".equalsIgnoreCase(userRole) || "ADMIN".equalsIgnoreCase(userRole)) return 5;
+        return 10; // Default (User)
+    }
+
+
 }

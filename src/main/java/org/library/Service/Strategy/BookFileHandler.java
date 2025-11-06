@@ -16,7 +16,7 @@ public class BookFileHandler {
 
     private static String booksFile = "books.txt"; // غير final
 
-    // تتيح تغيير مسار الملف للاختبارات
+
     public static void setBooksFile(String filePath) {
         booksFile = filePath;
     }

@@ -3,7 +3,7 @@ package org.library;
 import org.junit.jupiter.api.*;
 import org.library.Domain.Book;
 import org.library.Service.Strategy.BookFileHandler;
-import org.library.Service.Strategy.BookService;
+import org.library.Service.Strategy.BookCDService;
 
 import java.io.File;
 import java.util.List;
@@ -13,13 +13,13 @@ import static org.junit.jupiter.api.Assertions.*;
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
 public class AuthBookTest {
 
-    private BookService bookService;
+    private BookCDService bookCDService;
     private static final String TEST_FILE = "test-books.txt";
 
     @BeforeAll
     void setup() {
         BookFileHandler.setBooksFile("test-books.txt"); // نوجه الملف للاختبارات
-        bookService = new BookService();
+        bookCDService = new BookCDService();
     }
 
     @BeforeEach
@@ -30,30 +30,30 @@ public class AuthBookTest {
 
     @Test
     void testAddBook() {
-        boolean added = bookService.addBook("Java Basics", "Weam Ahmad", "ISBN123");
+        boolean added = bookCDService.addBook("Java Basics", "Weam Ahmad", "ISBN123");
         assertTrue(added, "الكتاب يجب أن يضاف بنجاح");
 
         // نتحقق من أن الكتاب موجود فعلاً
-        List<Book> books = bookService.searchBooks("ISBN123");
+        List<Book> books = bookCDService.searchBooks("ISBN123");
         assertEquals(1, books.size());
         assertEquals("Java Basics", books.get(0).getTitle());
     }
 
     @Test
     void testRemoveBook() {
-        bookService.addBook("Python Basics", "Seba", "ISBN999");
-        boolean removed = bookService.removeByIsbn("ISBN999");
+        bookCDService.addBook("Python Basics", "Seba", "ISBN999");
+        boolean removed = bookCDService.removeByIsbn("ISBN999");
         assertTrue(removed, "الكتاب يجب أن يُحذف");
 
         // يجب ألا يبقى الكتاب في الملف
-        List<Book> books = bookService.searchBooks("ISBN999");
+        List<Book> books = bookCDService.searchBooks("ISBN999");
         assertTrue(books.isEmpty());
     }
 
     @Test
     void testSearchBook() {
-        bookService.addBook("C++ Basics", "Weam", "ISBN555");
-        List<Book> results = bookService.searchBooks("C++");
+        bookCDService.addBook("C++ Basics", "Weam", "ISBN555");
+        List<Book> results = bookCDService.searchBooks("C++");
         assertFalse(results.isEmpty(), "يجب العثور على الكتاب");
         assertEquals("C++ Basics", results.get(0).getTitle());
     }

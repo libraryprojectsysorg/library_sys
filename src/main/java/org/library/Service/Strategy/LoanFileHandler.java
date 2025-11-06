@@ -7,7 +7,6 @@
 package org.library.Service.Strategy;
 
 import org.library.Domain.*;
-import org.library.Service.Strategy.BookService;
 
 import java.io.*;
 import java.time.LocalDate;
@@ -85,19 +84,49 @@ public class LoanFileHandler {
     }
 
     private Media findMediaByIsbn(String isbn) {
-        BookService bookService = new BookService();
-        List<Book> books = bookService.searchBooks(isbn);
-        Optional<Book> result = books.stream()
+        BookCDService bookCDService = new BookCDService();
+
+        // ابحث أولاً في الكتب
+        List<Book> books = bookCDService.searchBooks(isbn);
+        Optional<Book> foundBook = books.stream()
                 .filter(b -> b.getIsbn().equals(isbn))
                 .findFirst();
-        return result.orElse(null);
+        if (foundBook.isPresent()) {
+            return foundBook.get();
+        }
+
+        // إذا ما لقي كتاب، ابحث في الـ CDs
+        List<CD> cds = bookCDService.searchCD(isbn);
+        Optional<CD> foundCD = cds.stream()
+                .filter(cd -> cd.getIsbn().equals(isbn))
+                .findFirst();
+
+        return foundCD.orElse(null);
     }
 
+
     private User findUserById(String userId) {
-        List<User> users = UserFileHandler.loadAllUsers(); // افترض إن عندك UserFileHandler
+        List<User> users = UserFileHandler.loadAllUsers();
         return users.stream()
                 .filter(u -> u.getId().equals(userId))
                 .findFirst()
                 .orElse(null);
     }
+
+
+
+
+        // ... باقي الدوال (loadAllLoans, saveLoan, rewriteAllLoans)
+
+        public boolean isMediaBorrowed(String mediaIsbn) {
+            List<Loan> loans = loadAllLoans();
+            for (Loan loan : loans) {
+                // افحص إذا نفس المادة مستعارة ولم تُعاد بعد
+                if (loan.getMedia().getIsbn().equals(mediaIsbn) && !loan.isReturned()) {
+                    return true; // المادة مستعارة حالياً
+                }
+            }
+            return false; // المادة متاحة
+        }
+
 }

@@ -9,22 +9,23 @@
 package org.library.Service.Strategy;
 
 import org.library.Domain.Book;
+import org.library.Domain.CD;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
-public class BookService {
+public class BookCDService {
 
     private List<Book> books;
+    private List<CD> cd;
 
-
-    public BookService() {
-        this.books = null;  // null يعني استخدم الملفات
+    public BookCDService() {
+        this.books = null;
     }
 
-    // كونستركتور للاختبارات: يسمح بتمرير قائمة موكد
-    public BookService(List<Book> books) {
+
+    public BookCDService(List<Book> books) {
         this.books = books;
     }
 
@@ -42,9 +43,9 @@ public class BookService {
         Book newBook = new Book(title, author, isbn);
 
         if (books != null) {
-            books.add(newBook);  // تحديث قائمة الاختبار
+            books.add(newBook);
         } else {
-            BookFileHandler.saveBook(newBook);  // تحديث الملفات
+            BookFileHandler.saveBook(newBook);
         }
 
         return true;
@@ -77,4 +78,19 @@ public class BookService {
 
         return removed;
     }
+
+    public List<CD> searchCD(String query) {
+        List<CD> allcds = cd != null ? cd : CDFileHandler.loadAllCDs();
+
+        if (query == null) return new ArrayList<>();
+        if (query.isEmpty()) return allcds;
+
+        String lQuery = query.toLowerCase();
+        return allcds.stream()
+                .filter(b -> b.getTitle().toLowerCase().contains(lQuery) ||
+                        b.getAuthor().toLowerCase().contains(lQuery) ||
+                        b.getIsbn().toLowerCase().contains(lQuery))
+                .collect(Collectors.toList());
+    }
+
 }

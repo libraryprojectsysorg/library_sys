@@ -3,7 +3,7 @@ package org.library.Service.Strategy;
 import org.library.Domain.EmailMessage;
 
 /**
- * Email server interface (Sprint 3).
+
 
  * @author Weam Ahmad
  * @author  Seba Abd Aljwwad

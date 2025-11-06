@@ -3,9 +3,8 @@ package org.library.Service.Strategy;
 import org.library.Domain.User;
 
 /**
- * Observer interface for notifications (Sprint 3).
- * Allows multiple notification channels (e.g., email, SMS, push).
- *
+
+
  * @author Weam Ahmad
  * @author  Seba Abd Aljwwad
  * @version 1.0

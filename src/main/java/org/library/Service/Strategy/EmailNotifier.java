@@ -6,7 +6,7 @@ import org.library.Domain.User;
 
 
 /**
- * تطبيق لنمط الملاحظ (Observer) يرسل الإشعارات عبر البريد الإلكتروني.
+
 
  * @author Weam Ahmad
  * @author  Seba Abd Aljwwad
@@ -20,7 +20,7 @@ public class EmailNotifier implements Observer {
 
     /**
      * Constructor.
-     * @param emailServer the email server
+     * @param emailServer .
      */
     public EmailNotifier(EmailServer emailServer) {
         this.emailServer = emailServer;

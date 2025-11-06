@@ -1,0 +1,5 @@
+s12217663@stu.najah.edu,hcqn vhpj tlxr xuqk,ADMIN,A001,Library Admin
+s12217424@stu.najah.edu,giuh bkld uxoj kimn,SUPER_ADMIN,SA001,Library Super Admin
+
+
+weam4732@gmail.com,456,USER,UD3A7D,سارة احمد

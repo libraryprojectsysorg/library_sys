@@ -13,7 +13,7 @@ public class AuthAdmin {
     private String loggedInEmail = null;
     private Role loggedInRole = null;
 
-    private final BookService bookService;
+    private final BookCDService bookCDService;
     private final BorrowService borrowService;
     private final ReminderService reminderService;
     private final FineCalculator fineCalculator;
@@ -24,7 +24,7 @@ public class AuthAdmin {
 
     public enum Role { SUPER_ADMIN, ADMIN ,USER}
 
-    public AuthAdmin(BorrowService borrowService, ReminderService reminderService, FineCalculator fineCalculator, BookService bookService) {
+    public AuthAdmin(BorrowService borrowService, ReminderService reminderService, FineCalculator fineCalculator, BookCDService bookCDService) {
         if (UserFileHandler.getUserByCredentials(SUPER_ADMIN_EMAIL, SUPER_ADMIN_PASS) == null) {
             UserFileHandler.saveUser(SUPER_ADMIN_EMAIL, SUPER_ADMIN_PASS, "SUPER_ADMIN", "SA001", "Library Super Admin");
         }
@@ -32,7 +32,7 @@ public class AuthAdmin {
         this.borrowService = borrowService;
         this.reminderService = reminderService;
         this.fineCalculator = fineCalculator;
-        this.bookService = bookService;
+        this.bookCDService = bookCDService;
     }
 
     public boolean login(String email, String password) {
@@ -84,15 +84,25 @@ public class AuthAdmin {
             System.out.println("6. View All CDs");
             System.out.println("7. Send Overdue Reminders");
 
+
             if (isSuperAdmin()) {
                 System.out.println("8. Add Admin");
                 System.out.println("9. Delete Admin");
                 System.out.println("10. Unregister User");
                 System.out.println("11. Fine Summary");
-                System.out.println("12. Logout");
+                System.out.println("12. Borrow Book");
+                System.out.println("13. Return Book");
+                System.out.println("14. Borrow CD");
+                System.out.println("15. Return CD");
+                System.out.println("16. Logout");
             } else {
                 System.out.println("8. Fine Summary");
-                System.out.println("9. Logout");
+                System.out.println("9. Borrow Book");
+                System.out.println("10. Return Book");
+                System.out.println("11. Borrow CD");
+                System.out.println("12. Return CD");
+                System.out.println("13. Pay Fine");
+                System.out.println("14. Logout");
             }
 
             System.out.print("Choose option: ");
@@ -118,7 +128,11 @@ public class AuthAdmin {
             case 9 -> deleteAdminInteractive(scanner);
             case 10 -> unregisterUserInteractive(scanner);
             case 11 -> fineSummaryInteractive(scanner);
-            case 12 -> { logout(); System.out.println("Logged out."); }
+            case 12 -> borrowBookInteractive(scanner);
+            case 13 -> returnBookInteractive(scanner);
+            case 14 -> borrowCDInteractive(scanner);
+            case 15 -> returnCDInteractive(scanner);
+            case 16 -> { logout(); System.out.println("Logged out."); }
             default -> System.out.println("Invalid option.");
         }
     }
@@ -133,7 +147,12 @@ public class AuthAdmin {
             case 6 -> viewAllCDs();
             case 7 -> sendOverdueRemindersInteractive(scanner);
             case 8 -> fineSummaryInteractive(scanner);
-            case 9 -> { logout(); System.out.println("Logged out."); }
+            case 9 -> borrowBookInteractive(scanner);
+            case 10 -> returnBookInteractive(scanner);
+            case 11 -> borrowCDInteractive(scanner);
+            case 12 -> returnCDInteractive(scanner);
+            case 13 -> payFineForUserInteractive(scanner);
+            case 14-> { logout(); System.out.println("Logged out."); }
             default -> System.out.println("Invalid option.");
         }
 
@@ -174,7 +193,7 @@ public class AuthAdmin {
         users.remove(user);
     }
 
-    private void fineSummaryInteractive(Scanner scanner) {
+    public void fineSummaryInteractive(Scanner scanner) {
         System.out.print("Enter user ID: ");
         String userId = scanner.nextLine().trim();
         User user = findUserById(userId);
@@ -197,23 +216,23 @@ public class AuthAdmin {
         System.out.println("✅ Email sent.");
     }
 
-    // ======== Books & CDs ========
+
     public void addBookInteractive(Scanner scanner) {
         System.out.print("Book title: "); String title = scanner.nextLine().trim();
         System.out.print("Author: "); String author = scanner.nextLine().trim();
         System.out.print("ISBN: "); String isbn = scanner.nextLine().trim();
-        boolean added = bookService.addBook(title, author, isbn);
+        boolean added = bookCDService.addBook(title, author, isbn);
         System.out.println(added ? "✅ Book added!" : "⚠️ Already exists.");
     }
 
     public void deleteBookInteractive(Scanner scanner) {
         System.out.print("ISBN to delete: "); String isbn = scanner.nextLine().trim();
-        boolean removed = bookService.removeByIsbn(isbn);
+        boolean removed = bookCDService.removeByIsbn(isbn);
         System.out.println(removed ? "✅ Book deleted." : "❌ Not found.");
     }
 
     public void viewAllBooks() {
-        List<Book> all = bookService.searchBooks("");
+        List<Book> all = bookCDService.searchBooks("");
         if (all.isEmpty()) { System.out.println("📚 No books."); return; }
         all.forEach(b -> System.out.println("- " + b.getTitle() + " by " + b.getAuthor() + " (ISBN: " + b.getIsbn() + ")"));
     }
@@ -241,4 +260,159 @@ public class AuthAdmin {
     private User findUserById(String id) {
         return users.stream().filter(u -> u.getId().equals(id)).findFirst().orElse(null);
     }
+    public void borrowBookInteractive(Scanner scanner) {
+        System.out.println("\n=== استعارة كتاب ===");
+
+        System.out.print("أدخل اسم الكتاب الذي تريد استعارته: ");
+        String title = scanner.nextLine().trim();
+
+        List<Book> matchingBooks = bookCDService.searchBooks(title);
+        if (matchingBooks.isEmpty()) {
+            System.out.println("❌ لم يتم العثور على كتاب بهذا الاسم.");
+            return;
+        }
+
+        Book bookToBorrow = matchingBooks.get(0); // أول نتيجة
+
+        System.out.print("أدخل ID الادمين الذي سيستعير الكتاب: ");
+        String userId = scanner.nextLine().trim();
+        User user = findUserById(userId);
+        if (user == null) {
+            System.out.println("❌ الادمين غير موجود.");
+            return;
+        }
+
+        try {
+            borrowService.borrowMedia(bookToBorrow, user);
+            System.out.println("✅ تم استعارة الكتاب بنجاح للأدمين: " + user.getName());
+        } catch (RuntimeException e) {
+            System.out.println("❌ فشل الاستعارة: " + e.getMessage());
+        }
+    }
+
+    public void borrowCDInteractive(Scanner scanner) {
+        System.out.println("\n=== استعارة CD ===");
+
+        System.out.print("أدخل اسم الـ CD الذي تريد استعارته: ");
+        String title = scanner.nextLine().trim();
+
+        List<CD> matchingCDs = bookCDService.searchCD(title);
+        if (matchingCDs.isEmpty()) {
+            System.out.println("❌ لم يتم العثور على CD بهذا الاسم.");
+            return;
+        }
+
+        CD cdToBorrow = matchingCDs.get(0);
+
+        System.out.print("أدخل ID الادمين الذي سيستعير الـ CD: ");
+        String userId = scanner.nextLine().trim();
+        User user = findUserById(userId);
+        if (user == null) {
+            System.out.println("❌ الادمين غير موجود.");
+            return;
+        }
+
+        try {
+            borrowService.borrowMedia(cdToBorrow, user);
+            System.out.println("✅ تم استعارة الـ CD بنجاح للأدمين: " + user.getName());
+        } catch (RuntimeException e) {
+            System.out.println("❌ فشل الاستعارة: " + e.getMessage());
+        }
+    }
+
+    public void returnBookInteractive(Scanner scanner) {
+        System.out.println("\n=== إرجاع كتاب ===");
+
+        System.out.print("أدخل اسم الكتاب الذي تريد إرجاعه: ");
+        String title = scanner.nextLine().trim();
+
+        List<Loan> matchingLoans = borrowService.getLoans().stream()
+                .filter(l -> l.getMedia() instanceof Book && ((Book) l.getMedia()).getTitle().equalsIgnoreCase(title))
+                .toList();
+
+        if (matchingLoans.isEmpty()) {
+            System.out.println("❌ لا توجد إعارات لهذا الكتاب.");
+            return;
+        }
+
+        Loan loanToReturn = matchingLoans.get(0);
+        int fine = borrowService.returnMedia(loanToReturn.getLoanId());
+        System.out.println("✅ تم إرجاع الكتاب بنجاح: " + ((Book) loanToReturn.getMedia()).getTitle());
+        if (fine > 0) {
+            System.out.println("⚠️ تم فرض غرامة: " + fine + " NIS على الادمين: " + loanToReturn.getUser().getName());
+        }
+    }
+
+    public void returnCDInteractive(Scanner scanner) {
+        System.out.println("\n=== إرجاع CD ===");
+
+        System.out.print("أدخل كود الـ CD الذي تريد إرجاعه: ");
+        String code = scanner.nextLine().trim();
+
+        List<Loan> matchingLoans = borrowService.getLoans().stream()
+                .filter(l -> l.getMedia() instanceof CD &&
+                        ((CD) l.getMedia()).getIsbn().equalsIgnoreCase(code))
+                .toList();
+
+        if (matchingLoans.isEmpty()) {
+            System.out.println("❌ لا توجد إعارات مطابقة للـ CD المدخل.");
+            return;
+        }
+
+        Loan loanToReturn = matchingLoans.get(0);
+        int fine = borrowService.returnMedia(loanToReturn.getLoanId());
+        System.out.println("✅ تم إرجاع الـ CD بنجاح: " + ((CD) loanToReturn.getMedia()).getTitle());
+        if (fine > 0) {
+            System.out.println("⚠️ تم فرض غرامة: " + fine + " NIS على الادمين: " + loanToReturn.getUser().getName());
+        }
+    }
+
+
+
+    public void payFineForUserInteractive(Scanner scanner) {
+        System.out.println("\n=== دفع الغرامة  ===");
+
+
+        System.out.print("أدخل بريد الادمين الإلكتروني: ");
+        String email = scanner.nextLine().trim();
+        User user = UserFileHandler.loadAllUsers().stream()
+                .filter(u -> u.getEmail().equalsIgnoreCase(email))
+                .findFirst()
+                .orElse(null);
+
+        if (user == null) {
+            System.out.println("❌ لم يتم العثور على الادمين.");
+            return;
+        }
+
+
+        FineFileManager.loadFines(user);
+        int fine = new FineCalculator(new BorrowService(new EmailNotifier(new RealEmailServer()))).calculateTotalFine(user);
+
+        if (fine > 0) {
+            System.out.println("لدى الادمين " + user.getName() + " غرامة مستحقة: " + fine + " شيكل.");
+            System.out.print("هل تريد الدفع الآن؟ (y/n): ");
+            String pay = scanner.nextLine().trim().toLowerCase();
+
+            if (pay.equals("y")) {
+                for (Fine f : user.getFines()) {
+                    if (!f.isPaid()) user.payFine(f);
+                }
+
+                FineFileManager.removePaidFines(user);
+
+                System.out.print("أدخل رقم الحساب البنكي: ");
+                String bank = scanner.nextLine().trim();
+
+                System.out.println("✅ تم دفع جميع الغرامات للادمين: " + user.getName());
+            } else {
+                System.out.println("تم إلغاء الدفع.");
+            }
+        } else {
+            System.out.println("الادمين ليس لديه غرامات مستحقة.");
+        }
+    }
+
+
+
 }

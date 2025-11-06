@@ -3,9 +3,9 @@ package org.library.Domain;
 import java.util.Objects;
 
 /**
- * Value object for overdue loans report (Sprint 3).
- *
- * @author YourName
+
+ * @author Weam Ahmad
+ * @author  Seba Abd Aljwwad
  * @version 1.1
  */
 public class OverdueReport {
@@ -15,16 +15,16 @@ public class OverdueReport {
     /**
      * @author Weam Ahmad
      * @author  Seba Abd Aljwwad
-     * Constructor.
-     * @param user the user
-     * @param overdueBooksCount the count
+
+     * @param user .
+     * @param overdueBooksCount .
      */
     public OverdueReport(User user, int overdueBooksCount) {
         this.user = user;
         this.overdueBooksCount = overdueBooksCount;
     }
 
-    // Getters
+
     public User getUser() { return user; }
     public int getOverdueBooksCount() { return overdueBooksCount; }
 
@@ -33,7 +33,7 @@ public class OverdueReport {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         OverdueReport that = (OverdueReport) o;
-        // يتم المقارنة بناءً على الحقلين user و overdueBooksCount
+
         return overdueBooksCount == that.overdueBooksCount &&
                 Objects.equals(user, that.user);
     }
