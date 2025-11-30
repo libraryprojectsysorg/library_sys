@@ -14,9 +14,9 @@ import java.util.List;
 
 public class BookFileHandler {
 
-    private static String booksFile = "books.txt"; // غير final
+    private static String booksFile = "books.txt";
 
-    // تتيح تغيير مسار الملف للاختبارات
+
     public static void setBooksFile(String filePath) {
         booksFile = filePath;
     }

@@ -14,7 +14,7 @@ import java.util.List;
  */
 public class CDFileHandler {
 
-    private static final String FILE_PATH = "cds.txt"; // ملف لتخزين CDs
+    private static final String FILE_PATH = "cds.txt";
 
     /**
      * Save a CD to file.
@@ -24,10 +24,10 @@ public class CDFileHandler {
     public static boolean saveCD(CD cd) {
         List<CD> cds = loadAllCDs();
 
-        // تحقق من وجود CD بنفس الكود
+
         for (CD c : cds) {
             if (c.getIsbn().equalsIgnoreCase(cd.getIsbn())) {
-                return false; // موجود مسبقاً
+                return false;
             }
         }
 
@@ -43,7 +43,7 @@ public class CDFileHandler {
     }
 
     /**
-     * Remove a CD by its code.
+
      * @param code CD code
      * @return true if removed
      */
@@ -53,7 +53,7 @@ public class CDFileHandler {
 
         if (!removed) return false;
 
-        // أعد كتابة الملف بعد الحذف
+
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(FILE_PATH))) {
             for (CD cd : cds) {
                 writer.write(cd.getTitle() + "," + cd.getAuthor() + "," + cd.getIsbn());
@@ -67,13 +67,13 @@ public class CDFileHandler {
     }
 
     /**
-     * Load all CDs from file.
+
      * @return list of CDs
      */
     public static List<CD> loadAllCDs() {
         List<CD> cds = new ArrayList<>();
         File file = new File(FILE_PATH);
-        if (!file.exists()) return cds; // لا يوجد ملف بعد
+        if (!file.exists()) return cds;
 
         try (BufferedReader reader = new BufferedReader(new FileReader(FILE_PATH))) {
             String line;

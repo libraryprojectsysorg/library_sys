@@ -1,8 +1,8 @@
-// File: org.library.Service.Strategy.fines.FineCalculator.java
+
 
 package org.library.Service.Strategy.fines;
 
-// تأكد من استيراد الكلاسات Domain
+
 import org.library.Domain.Book;
 import org.library.Domain.CD;
 import org.library.Domain.Loan;
@@ -26,7 +26,7 @@ public class FineCalculator {
     public int calculateTotalFine(User user) {
         int total = 0;
         LocalDate today = LocalDate.now();
-        String userRole = user.getRole(); // نحصل على الدور مرة واحدة
+        String userRole = user.getRole();
 
         for (Loan loan : borrowService.getLoans()) {
             if (loan.getUser().equals(user) && borrowService.isOverdue(loan)) {
@@ -34,7 +34,7 @@ public class FineCalculator {
                 long overdueDays = ChronoUnit.DAYS.between(loan.getDueDate(), today);
                 int dailyFineRate = 0;
 
-                // تحديد السعر اليومي بناءً على نوع المادة (Book/CD) والدور
+
                 if (loan.getMedia() instanceof Book book) {
                     dailyFineRate = book.getDailyFineRate(userRole);
                 } else if (loan.getMedia() instanceof CD cd) {

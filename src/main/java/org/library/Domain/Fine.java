@@ -9,8 +9,8 @@ import java.util.Objects;
  * @version 1.0
  */
 public class Fine {
-    private final int amount;  // NIS
-    private boolean paid;      // Status
+    private final int amount;
+    private boolean paid;
 
     /**
      * Constructor for new unpaid fine.

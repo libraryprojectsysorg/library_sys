@@ -7,39 +7,45 @@ import java.util.List;
 import java.util.UUID;
 
 public class UserFileHandler {
-    private static final String USERS_FILE = "users.txt";
 
-    /** حفظ مستخدم جديد */
+
+    private static String USERS_FILE = "users.txt";
+
+
+    public static void setUsersFile(String filePath) {
+        USERS_FILE = filePath;
+    }
+
     public static boolean saveUser(String email, String password, String role, String id, String name) {
-        // إذا الدور غير محدد أو ليس ADMIN، اعتبره USER
+
         if (role == null || role.isEmpty() || !role.equalsIgnoreCase("ADMIN")) {
             role = "USER";
             if (id == null || id.isEmpty()) {
                 id = "U" + UUID.randomUUID().toString().substring(0, 5).toUpperCase();
             }
         } else if (role.equalsIgnoreCase("ADMIN")) {
-            // فقط Admin ثابت (A001, A002) مسموح لهم
             if (id == null || id.isEmpty()) {
-                id = "A001"; // أو حسب الحاجة
+                id = "A001";
             }
         }
 
-        // التنسيق: email,password,role,id,name
-        String userData = String.format("%s,%s,%s,%s,%s", email, password, role, id, name);
+        String userData = email + "," + password + "," + role + "," + id + "," + name;
+
         try (FileWriter writer = new FileWriter(USERS_FILE, true);
              PrintWriter printWriter = new PrintWriter(writer)) {
 
             printWriter.println(userData);
+
         } catch (IOException e) {
-            System.err.println("❌ خطأ أثناء حفظ بيانات المستخدم: " + e.getMessage());
             return false;
         }
+
         return true;
     }
 
-    /** تحميل كل المستخدمين */
     public static List<User> loadAllUsers() {
         List<User> users = new ArrayList<>();
+
         try (BufferedReader reader = new BufferedReader(new FileReader(USERS_FILE))) {
             String line;
             while ((line = reader.readLine()) != null) {
@@ -49,16 +55,14 @@ public class UserFileHandler {
                     String role = parts[2];
                     String id = parts[3];
                     String name = parts[4];
-                    users.add(new User(id, name, email, role)); // ← إضافة role هنا
+                    users.add(new User(id, name, email, role));
                 }
             }
-        } catch (IOException e) {
-            System.err.println("❌ خطأ أثناء قراءة ملف المستخدمين: " + e.getMessage());
-        }
+        } catch (IOException ignored) { }
+
         return users;
     }
 
-    /** تحقق من بيانات الدخول */
     public static User getUserByCredentials(String email, String password) {
         try (BufferedReader reader = new BufferedReader(new FileReader(USERS_FILE))) {
             String line;
@@ -71,15 +75,11 @@ public class UserFileHandler {
                     return new User(id, name, email, role);
                 }
             }
-        } catch (IOException e) {
-            System.err.println("❌ خطأ أثناء البحث عن بيانات الدخول: " + e.getMessage());
-        }
+        } catch (IOException ignored) { }
+
         return null;
     }
 
-
-
-    /** الحصول على دور المستخدم */
     public static String getUserRole(String email) {
         try (BufferedReader reader = new BufferedReader(new FileReader(USERS_FILE))) {
             String line;
@@ -89,11 +89,11 @@ public class UserFileHandler {
                     return parts[2];
                 }
             }
-        } catch (IOException e) { }
+        } catch (IOException ignored) { }
+
         return null;
     }
 
-    /** حذف مستخدم بالـ ID مع التحقق من الدور */
     public static boolean removeUserById(String userId, String requesterRole) {
         List<String> updatedLines = new ArrayList<>();
         boolean removed = false;
@@ -104,10 +104,11 @@ public class UserFileHandler {
                 String[] parts = line.split(",");
                 if (parts.length >= 5 && parts[3].equals(userId)) {
                     String targetRole = parts[2];
+
                     if ("SUPER_ADMIN".equals(targetRole) && !"SUPER_ADMIN".equals(requesterRole)) {
-                        updatedLines.add(line); // لا يسمح بحذف Super Admin إلا من قبل Super Admin
+                        updatedLines.add(line);
                     } else if ("ADMIN".equals(targetRole) && "ADMIN".equals(requesterRole)) {
-                        updatedLines.add(line); // Admin لا يحذف Admin آخر
+                        updatedLines.add(line);
                     } else {
                         removed = true;
                     }
@@ -116,7 +117,6 @@ public class UserFileHandler {
                 }
             }
         } catch (IOException e) {
-            System.err.println("❌ خطأ أثناء قراءة الملف: " + e.getMessage());
             return false;
         }
 
@@ -124,11 +124,41 @@ public class UserFileHandler {
             try (PrintWriter writer = new PrintWriter(new FileWriter(USERS_FILE, false))) {
                 for (String l : updatedLines) writer.println(l);
             } catch (IOException e) {
-                System.err.println("❌ خطأ أثناء إعادة كتابة الملف: " + e.getMessage());
                 return false;
             }
         }
 
         return removed;
+    }
+
+    public static boolean updateUser(User user) {
+        List<String> updatedLines = new ArrayList<>();
+        boolean found = false;
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(USERS_FILE))) {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String[] parts = line.split(",");
+                if (parts.length >= 5 && parts[0].equalsIgnoreCase(user.getEmail())) {
+                    String newLine = user.getEmail() + "," + user.getPassword() + "," + user.getRole() + "," + user.getId() + "," + user.getName();
+                    updatedLines.add(newLine);
+                    found = true;
+                } else {
+                    updatedLines.add(line);
+                }
+            }
+        } catch (IOException e) {
+            return false;
+        }
+
+        if (!found) return false;
+
+        try (PrintWriter writer = new PrintWriter(new FileWriter(USERS_FILE, false))) {
+            for (String l : updatedLines) writer.println(l);
+        } catch (IOException e) {
+            return false;
+        }
+
+        return true;
     }
 }

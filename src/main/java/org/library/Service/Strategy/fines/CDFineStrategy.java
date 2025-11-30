@@ -14,6 +14,6 @@ public class CDFineStrategy implements FineStrategy {
      */
     @Override
     public int calculateFine(int overdueDays) {
-        return 20 * overdueDays;  // US5.2 CD rate
+        return 20 * overdueDays;
     }
 }

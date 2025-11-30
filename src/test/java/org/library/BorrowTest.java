@@ -4,7 +4,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.library.Domain.*;
 import org.library.Service.Strategy.BorrowService;
-import org.library.Service.Strategy.EmailNotifier;
+
 import org.library.Service.Strategy.LoanFileHandler;
 
 import java.time.Clock;
@@ -62,7 +62,7 @@ class BorrowTest {
     void testReturnBookNoFine() {
         Loan loan = borrowService.borrowMedia(book, user);
 
-        // تم التعديل: استخدم ArrayList بدل List.of()
+
         when(mockFileHandler.loadAllLoans()).thenReturn(new ArrayList<>(List.of(loan)));
 
         int fine = borrowService.returnMedia(loan.getLoanId());
@@ -81,7 +81,7 @@ class BorrowTest {
 
         Loan loan = borrowService.borrowMedia(book, user);
 
-        // تم التعديل: استخدم ArrayList
+
         when(mockFileHandler.loadAllLoans()).thenReturn(new ArrayList<>(List.of(loan)));
 
         borrowService.setClock(Clock.systemDefaultZone());

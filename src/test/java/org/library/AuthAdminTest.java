@@ -1,84 +1,106 @@
 package org.library;
 
-
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 
-
-import org.library.Domain.Book;
-import org.library.Service.Strategy.BookService;
-import org.library.Service.Strategy.BorrowService;
+import org.library.Service.Strategy.*;
 import org.library.Service.Strategy.fines.FineCalculator;
-import org.library.Service.Strategy.ReminderService;
-import org.library.Service.Strategy.AuthAdmin;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 
-import java.io.ByteArrayInputStream;
+import static org.junit.jupiter.api.Assertions.*;
 
-
-
-import static org.mockito.Mockito.*;
-
-
-
-import java.util.Scanner;
-
-;
-
+@ExtendWith(MockitoExtension.class)
 class AuthAdminTest {
 
-    AuthAdmin authAdmin;
-    BookService bookService;
-    BorrowService borrowService;
-    ReminderService reminderService;
-    FineCalculator fineCalculator;
+    @Mock private BorrowService borrowService;
+    @Mock private ReminderService reminderService;
+    @Mock private FineCalculator fineCalculator;
+    @Mock private BookCDService bookCDService;
+
+    private AuthAdmin authAdmin;
+    private static final String TEST_USER_FILE = "test_users_auth.txt";
 
     @BeforeEach
     void setUp() {
-        bookService = mock(BookService.class);
-        borrowService = mock(BorrowService.class);
-        reminderService = mock(ReminderService.class);
-        fineCalculator = mock(FineCalculator.class);
 
-        authAdmin = new AuthAdmin(borrowService, reminderService, fineCalculator, bookService);
+        UserFileHandler UserFileHandler = null;
+        UserFileHandler.setUsersFile(TEST_USER_FILE);
 
-        // تسجيل الدخول كأدمن
-        authAdmin.login("s12217663@stu.najah.edu", "ws1234");
+
+        File file = new File(TEST_USER_FILE);
+        if (file.exists()) file.delete();
+
+
+        try (PrintWriter writer = new PrintWriter(new FileWriter(TEST_USER_FILE, true))) {
+
+            writer.println("admin@test.com,admin123,SUPER_ADMIN,SA01,Super Admin");
+            writer.println("normal@test.com,user123,USER,U01,Normal User");
+        } catch (IOException e) {
+            fail("فشل في إعداد ملف الاختبار: " + e.getMessage());
+        }
+
+
+        authAdmin = new AuthAdmin(borrowService, reminderService, fineCalculator, bookCDService);
+    }
+
+    @AfterEach
+    void tearDown() {
+
+        File file = new File(TEST_USER_FILE);
+        if (file.exists()) {
+            file.delete();
+        }
     }
 
     @Test
-    void testAddBookInteractive() {
-        String simulatedInput = "Test Book\nTest Author\n1234567890\n";
-        Scanner scanner = new Scanner(new ByteArrayInputStream(simulatedInput.getBytes()));
+    void shouldLoginSuccessfully_AsSuperAdmin() {
 
-        when(bookService.addBook("Test Book", "Test Author", "1234567890")).thenReturn(true);
+        boolean result = authAdmin.login("admin@test.com", "admin123");
 
-        authAdmin.addBookInteractive(scanner);
+        assertTrue(result, "يجب أن ينجح تسجيل الدخول");
 
-        verify(bookService).addBook("Test Book", "Test Author", "1234567890");
+        assertTrue(authAdmin.isSuperAdmin(), "يجب أن يتم التعرف عليه كـ Super Admin");
     }
 
     @Test
-    void testDeleteBookInteractive() {
-        String simulatedInput = "1234567890\n";
-        Scanner scanner = new Scanner(new ByteArrayInputStream(simulatedInput.getBytes()));
+    void shouldLoginSuccessfully_AsUser() {
 
-        Book book = new Book("Test Book", "Test Author", "1234567890");
-        when(bookService.searchBooks("1234567890")).thenReturn(java.util.List.of(book));
-        when(bookService.removeByIsbn("1234567890")).thenReturn(true);
+        boolean result = authAdmin.login("normal@test.com", "user123");
 
-        authAdmin.deleteBookInteractive(scanner);
 
-        verify(bookService).removeByIsbn("1234567890");
+        assertTrue(result, "يجب أن ينجح تسجيل الدخول");
+        assertTrue(authAdmin.isLoggedInUser(), "يجب أن يتم التعرف عليه كـ User");
+        assertFalse(authAdmin.isLoggedInAdmin());
     }
 
     @Test
-    void testViewAllBooks() {
-        Book book1 = new Book("Book1", "Author1", "111");
-        Book book2 = new Book("Book2", "Author2", "222");
-        when(bookService.searchBooks("")).thenReturn(java.util.List.of(book1, book2));
+    void shouldFailLogin_WithWrongPassword() {
 
-        authAdmin.viewAllBooks();
-        verify(bookService).searchBooks("");
+        boolean result = authAdmin.login("admin@test.com", "wrongpass");
+
+
+        assertFalse(result, "يجب أن يفشل تسجيل الدخول بكلمة مرور خاطئة");
+    }
+
+    @Test
+    void shouldLogoutCorrectly() {
+
+        authAdmin.login("admin@test.com", "admin123");
+        assertTrue(authAdmin.isSuperAdmin());
+
+
+        authAdmin.logout();
+
+
+        assertFalse(authAdmin.isSuperAdmin());
+        assertFalse(authAdmin.isLoggedInUser());
     }
 }

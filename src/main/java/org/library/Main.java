@@ -6,7 +6,6 @@ import org.library.Service.Strategy.fines.FineCalculator;
 
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Scanner;
 
@@ -22,26 +21,23 @@ public class Main {
 
         Scanner scanner = new Scanner(System.in);
 
-        // ===== إعداد الخدمات =====
         RealEmailServer realEmailServer = new RealEmailServer();
         EmailNotifier emailNotifier = new EmailNotifier(realEmailServer);
         BorrowService borrowService = new BorrowService(emailNotifier);
         ReminderService reminderService = new ReminderService(List.of(emailNotifier), borrowService);
         FineCalculator fineCalculator = new FineCalculator(borrowService);
-        BookService bookService = new BookService();
-        AuthAdmin authAdmin = new AuthAdmin(borrowService, reminderService, fineCalculator, bookService);
-
-        setupDemoData(borrowService, bookService);
+        BookCDService bookCDService = new BookCDService();
+        AuthAdmin authAdmin = new AuthAdmin(borrowService, reminderService, fineCalculator, bookCDService);
 
         System.out.println("=== Library Management System ===");
 
         boolean exitProgram = false;
 
-        while (!exitProgram) {  // ← الحلقة الرئيسية
+        while (!exitProgram) {
             String loggedInEmail = null;
 
             while (loggedInEmail == null) {
-                System.out.print("\nهل لديك حساب مسجل بالفعل؟ (نعم/لا/خروج): ");
+                System.out.print("\nهل لديك حساب مسجل بالفعل؟ (نعم/لا/نسيت كلمة السر/خروج): ");
                 String response = scanner.nextLine().trim();
 
                 if (response.equalsIgnoreCase("نعم")) {
@@ -57,6 +53,9 @@ public class Main {
                         System.out.println("خطأ: البريد الإلكتروني أو كلمة المرور غير صحيحة.");
                     }
 
+                } else if (response.equalsIgnoreCase("نسيت كلمة السر")) {
+                    resetPasswordInteractive(scanner);
+
                 } else if (response.equalsIgnoreCase("لا")) {
                     registerUserInteractive(scanner);
 
@@ -64,7 +63,7 @@ public class Main {
                     exitProgram = true;
                     break;
                 } else {
-                    System.out.println("إجابة غير صالحة. يرجى إدخال (نعم/لا/خروج).");
+                    System.out.println("إجابة غير صالحة. يرجى إدخال (نعم/لا/نسيت كلمة السر/خروج).");
                 }
             }
 
@@ -72,15 +71,15 @@ public class Main {
 
             if (authAdmin.isSuperAdmin()) {
                 System.out.println("\nتم تسجيل الدخول كـ **مدير أعلى (SUPER ADMIN)**.");
-                authAdmin.showAdminMenu(scanner); // تشمل كل الخيارات
+                authAdmin.showAdminMenu(scanner);
             } else if (authAdmin.isLoggedInAdmin()) {
                 System.out.println("\nتم تسجيل الدخول كـ **مدير عادي (ADMIN)**.");
-                authAdmin.showAdminMenu(scanner); // تشمل خيارات المدير العادي فقط
+                authAdmin.showAdminMenu(scanner);
             } else if (authAdmin.isLoggedInUser()) {
                 User user = findUserByEmail(loggedInEmail);
                 if (user != null) {
                     System.out.println("\nتم تسجيل الدخول كـ **مستخدم عادي**.");
-                    userMenu(scanner, borrowService, fineCalculator, bookService, user);
+                    userMenu(scanner, borrowService, fineCalculator, bookCDService, user);
                 } else {
                     System.out.println("خطأ: لم يتم العثور على بيانات المستخدم.");
                 }
@@ -88,16 +87,12 @@ public class Main {
                 System.out.println("❌ خطأ: لم يتم التعرف على الدور.");
             }
 
-
-
-            // بعد انتهاء أي جلسة، يعود البرنامج للحلقة الرئيسية لتسجيل الدخول مرة أخرى
             System.out.println("\n=== العودة إلى شاشة تسجيل الدخول ===");
         }
 
         scanner.close();
         System.out.println("System exited.");
     }
-
 
     private static void registerUserInteractive(Scanner scanner) {
         System.out.println("\n=== تسجيل مستخدم جديد ===");
@@ -120,13 +115,56 @@ public class Main {
                 .orElse(null);
     }
 
-    private static void userMenu(Scanner scanner, BorrowService borrowService, FineCalculator fineCalculator, BookService bookService, User user) {
+    private static void resetPasswordInteractive(Scanner scanner) {
+        System.out.print("أدخل بريدك الإلكتروني: ");
+        String email = scanner.nextLine().trim();
+
+        User user = UserFileHandler.loadAllUsers().stream()
+                .filter(u -> u.getEmail().equalsIgnoreCase(email))
+                .findFirst()
+                .orElse(null);
+
+        if (user == null) {
+            System.out.println("❌ البريد الإلكتروني غير موجود.");
+            return;
+        }
+
+        String otp = String.format("%06d", new java.util.Random().nextInt(999999));
+        new EmailNotifier(new RealEmailServer()).notify(user,
+                "رمز التحقق لإعادة تعيين كلمة المرور: " + otp);
+        System.out.println("✅ تم إرسال رمز التحقق إلى بريدك الإلكتروني.");
+
+        System.out.print("أدخل رمز التحقق: ");
+        String enteredOtp = scanner.nextLine().trim();
+        if (!enteredOtp.equals(otp)) {
+            System.out.println("❌ الرمز غير صحيح.");
+            return;
+        }
+
+        System.out.print("أدخل كلمة المرور الجديدة: ");
+        String newPassword = scanner.nextLine().trim();
+        System.out.print("أعد إدخال كلمة المرور الجديدة: ");
+        String confirmPassword = scanner.nextLine().trim();
+
+        if (!newPassword.equals(confirmPassword)) {
+            System.out.println("❌ كلمات المرور غير متطابقة.");
+            return;
+        }
+
+        user.setPassword(newPassword);
+        UserFileHandler.updateUser(user);
+        System.out.println("✅ تم تحديث كلمة المرور بنجاح.");
+    }
+
+    private static void userMenu(Scanner scanner, BorrowService borrowService, FineCalculator fineCalculator, BookCDService bookCDService, User user) {
         while (true) {
             System.out.println("\n=== User Menu ===");
-            System.out.println("1. Borrow Item");
-            System.out.println("2. Return Item");
-            System.out.println("3. Pay Fine");
-            System.out.println("4. Exit");
+            System.out.println("1. Borrow Book");
+            System.out.println("2. Return Book");
+            System.out.println("3. Borrow CD");
+            System.out.println("4. Return CD");
+            System.out.println("5. Pay Fine");
+            System.out.println("6. Exit");
             System.out.print("Choose option: ");
             String choice = scanner.nextLine().trim();
 
@@ -136,7 +174,7 @@ public class Main {
                     System.out.print("أدخل اسم الكتاب الذي تريد استعارته: ");
                     String title = scanner.nextLine().trim();
 
-                    List<Book> matchingBooks = bookService.searchBooks(title);
+                    List<Book> matchingBooks = bookCDService.searchBooks(title);
 
                     if (matchingBooks.isEmpty()) {
                         System.out.println("خطأ: لم يتم العثور على كتاب بالعنوان المدخل.");
@@ -147,64 +185,98 @@ public class Main {
 
                     try {
                         borrowService.borrowMedia(bookToBorrow, user);
-                        System.out.println("تم استعارة كتاب: " + bookToBorrow.getTitle() + " بنجاح!");
+                        System.out.println("✅ تم استعارة كتاب: " + bookToBorrow.getTitle() + " بنجاح!");
                     } catch (RuntimeException e) {
-                        System.out.println("فشل الاستعارة: " + e.getMessage());
+                        System.out.println("❌ فشل الاستعارة: " + e.getMessage());
                     }
                 }
-                case "2" -> {
 
+                case "2" -> {
+                    System.out.println("=== إرجاع كتاب ===");
                     List<Loan> userLoans = borrowService.getLoans().stream()
-                            .filter(loan -> loan.getUser().equals(user))
+                            .filter(loan -> loan.getUser().equals(user) && loan.getMedia() instanceof Book)
                             .toList();
 
                     if (userLoans.isEmpty()) {
-                        System.out.println("❌ لا توجد إعارات حالية للإرجاع.");
+                        System.out.println("❌ لا توجد إعارات كتب حالية للإرجاع.");
                         break;
                     }
 
-                    System.out.println("📋 قائمة الإعارات الحالية:");
                     for (Loan loan : userLoans) {
-                        String mediaType = loan.getMedia() instanceof Book ? "Book" : "CD";
-                        String title = loan.getMedia() instanceof Book ? ((Book)loan.getMedia()).getTitle()
-                                : ((CD)loan.getMedia()).getTitle();
-                        System.out.println("- Loan ID: " + loan.getLoanId() + " | " + mediaType + ": " + title);
+                        System.out.println("- Loan ID: " + loan.getLoanId() + " | Book: " + ((Book) loan.getMedia()).getTitle());
                     }
 
-                    // 2️⃣ طلب Loan ID من المستخدم
                     System.out.print("أدخل Loan ID للإرجاع: ");
                     String loanId = scanner.nextLine().trim();
 
                     boolean returned = borrowService.returnLoan(loanId);
-                    if (returned)
-                        System.out.println("✅ تم إرجاع العنصر بنجاح!");
-                    else
-                        System.out.println("❌ خطأ: رقم الإعارة غير صالح أو تم إرجاعه بالفعل.");
-                    break;
+                    System.out.println(returned ? "✅ تم الإرجاع بنجاح!" : "❌ رقم الإعارة غير صالح.");
                 }
+
                 case "3" -> {
+                    System.out.println("=== استعارة CD ===");
+                    System.out.print("أدخل اسم الـ CD الذي تريد استعارته: ");
+                    String title = scanner.nextLine().trim();
+
+                    List<CD> matchingCDs = bookCDService.searchCD(title);
+
+                    if (matchingCDs.isEmpty()) {
+                        System.out.println("❌ لم يتم العثور على CD بهذا الاسم.");
+                        break;
+                    }
+
+                    CD cdToBorrow = matchingCDs.get(0);
+
+                    try {
+                        borrowService.borrowMedia(cdToBorrow, user);
+                        System.out.println("✅ تم استعارة CD: " + cdToBorrow.getTitle() + " بنجاح!");
+                    } catch (RuntimeException e) {
+                        System.out.println("❌ فشل الاستعارة: " + e.getMessage());
+                    }
+                }
+
+                case "4" -> {
+                    System.out.println("=== إرجاع CD ===");
+                    List<Loan> userLoans = borrowService.getLoans().stream()
+                            .filter(loan -> loan.getUser().equals(user) && loan.getMedia() instanceof CD)
+                            .toList();
+
+                    if (userLoans.isEmpty()) {
+                        System.out.println("❌ لا توجد إعارات CD حالية للإرجاع.");
+                        break;
+                    }
+
+                    for (Loan loan : userLoans) {
+                        System.out.println("- Loan ID: " + loan.getLoanId() + " | CD: " + ((CD) loan.getMedia()).getTitle());
+                    }
+
+                    System.out.print("أدخل Loan ID للإرجاع: ");
+                    String loanId = scanner.nextLine().trim();
+
+                    boolean returned = borrowService.returnLoan(loanId);
+                    System.out.println(returned ? "✅ تم الإرجاع بنجاح!" : "❌ رقم الإعارة غير صالح.");
+                }
+
+                case "5" -> {
+                    System.out.println("=== دفع الغرامة ===");
 
                     FineFileManager.loadFines(user);
-
                     int fine = fineCalculator.calculateTotalFine(user);
+
                     if (fine > 0) {
                         System.out.println("لديك " + fine + " شيكل كغرامة مستحقة.");
                         System.out.print("هل تريد الدفع الآن؟ (y/n): ");
                         String pay = scanner.nextLine().trim().toLowerCase();
 
                         if (pay.equals("y")) {
-
                             for (Fine f : user.getFines()) {
-                                if (!f.isPaid()) {
-                                    user.payFine(f);
-                                }
+                                if (!f.isPaid()) user.payFine(f);
                             }
 
-
                             FineFileManager.removePaidFines(user);
-                            System.out.println("ادخل رقم حساب البطاقة البنكية: ");
-                            String bank = scanner.nextLine().trim().toLowerCase();
-                            System.out.println("✅ تم دفع جميع الغرامات ");
+                            System.out.print("أدخل رقم الحساب البنكي: ");
+                            String bank = scanner.nextLine().trim();
+                            System.out.println("✅ تم دفع جميع الغرامات بنجاح.");
                         } else {
                             System.out.println("تم إلغاء الدفع.");
                         }
@@ -213,37 +285,14 @@ public class Main {
                     }
                 }
 
-                case "4" -> {
-                    System.out.println("Goodbye, " + user.getName() + "!");
+                case "6" -> {
+                    System.out.println("👋 وداعًا، " + user.getName() + "!");
                     return;
                 }
-                default -> System.out.println("Invalid option. Try again.");
+
+                default -> System.out.println("❌ خيار غير صالح. حاول مرة أخرى.");
             }
+
         }
-    }
-
-    private static void setupDemoData(BorrowService borrowService, BookService bookService) {
-        String demoEmail = "s12217424@stu.najah.edu";
-        if (UserFileHandler.getUserByCredentials(demoEmail, "er1234") == null) {
-            UserFileHandler.saveUser(demoEmail, "er1234", "USER", "U1A2F7", " صبا عبد  الجواد");
-        }
-
-        try {
-            bookService.addBook("Demo Overdue Book", "Test Author", "999888777");
-        } catch (IllegalArgumentException e) { }
-
-        User demoUser = findUserByEmail(demoEmail);
-        Book demoBook = new Book("Demo Overdue Book", "Test Author", "999888777");
-
-        LocalDate oldBorrowDate = LocalDate.now().minusDays(30);
-
-        if (borrowService.getLoans().stream().noneMatch(loan -> loan.getLoanId().equals("DEMO_LOAN"))) {
-            if (demoUser != null) {
-                Loan demoLoan = new Loan("DEMO_LOAN", demoBook, demoUser, oldBorrowDate, oldBorrowDate.plusDays(28));
-                borrowService.addLoan(demoLoan);
-            }
-        }
-
-        System.out.println("Demo data loaded: 1 overdue book for testing reminders.");
     }
 }
