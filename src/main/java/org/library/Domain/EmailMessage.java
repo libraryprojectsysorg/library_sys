@@ -27,4 +27,6 @@ public class EmailMessage {
     public String getRecipientEmail() { return recipientEmail; }
     public String getSubject() { return subject; }
     public String getContent() { return content; }
+
+
 }

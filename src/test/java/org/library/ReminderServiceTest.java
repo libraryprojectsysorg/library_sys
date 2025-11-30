@@ -1,55 +1,89 @@
 package org.library;
-import org.library.Service.Strategy.BorrowService;
-import org.library.Service.Strategy.EmailNotifier;
-import org.library.Service.Strategy.EmailServer;
-import org.library.Domain.User;
-import org.library.Service.Strategy.ReminderService;
+
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.library.Domain.User;
+import org.library.Service.Strategy.BorrowService;
+import org.library.Service.Strategy.Observer;
+import org.library.Service.Strategy.ReminderService;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import static org.mockito.Mockito.*;
+
+import java.util.Collections;
 import java.util.List;
 
-/**
- * Tests for ReminderService (US3.1, Sprint 3).
- * @author Weam Ahmad
- * @author  Seba Abd Aljwwad
- * @version 1.0
- */
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.*;
+
 @ExtendWith(MockitoExtension.class)
-public class ReminderServiceTest {
-    @Mock
-    private BorrowService mockBorrowService;
-    @Mock
-    private EmailServer mockEmailServer;
-    @Mock
-    private User mockUser;
+class ReminderServiceTest {
 
-    @Test
-    void testSendReminders() {
-        // Arrange
-        EmailNotifier notifier = new EmailNotifier(mockEmailServer);
-        ReminderService service = new ReminderService(List.of(notifier), mockBorrowService);
-        when(mockBorrowService.getUsersWithOverdueLoans()).thenReturn(List.of(mockUser));
-        when(mockBorrowService.countOverdueLoansForUser(mockUser)).thenReturn(2);
-        when(mockUser.getEmail()).thenReturn("test@example.com");
+    @Mock
+    private BorrowService borrowService;
 
-        // Act
-        service.sendReminders();
+    @Mock
+    private Observer mockObserver;
 
-        // Assert: Mock records sent message
-        verify(mockEmailServer).send(argThat(email ->
-                email.getContent().equals("You have 2 overdue book(s).") &&
-                        email.getRecipientEmail().equals("test@example.com")
-        ));
+    private ReminderService reminderService;
+
+    @BeforeEach
+    void setUp() {
+
+        reminderService = new ReminderService(List.of(mockObserver), borrowService);
     }
 
-    // Optional: Test with time mock (integrate with Sprint 2 Clock)
     @Test
-    void testSendRemindersWithMockTime() {
-        // Set mock clock in borrowService to simulate overdues
-        // ... (use Clock from Sprint 2)
-        // Then call sendReminders and assert
+    void shouldSendNotification_WhenUserHasOverdueLoans() {
+
+        User user = new User("U01", "John Doe", "john@test.com", "USER");
+
+
+        when(borrowService.getUsersWithOverdueLoans()).thenReturn(List.of(user));
+
+
+        when(borrowService.countOverdueLoansForUser(user)).thenReturn(3);
+
+
+        reminderService.sendReminders();
+
+
+        String expectedMessage = "You have 3 overdue book(s).";
+
+
+        verify(mockObserver, times(1)).notify(eq(user), eq(expectedMessage));
+    }
+
+    @Test
+    void shouldNotSendNotification_WhenNoUsersHaveOverdueLoans() {
+
+        when(borrowService.getUsersWithOverdueLoans()).thenReturn(Collections.emptyList());
+
+
+        reminderService.sendReminders();
+
+
+        verify(mockObserver, never()).notify(any(), any());
+    }
+
+    @Test
+    void shouldSendToAllObservers_IfMultipleNotifiersExist() {
+
+        Observer secondObserver = mock(Observer.class);
+
+
+        reminderService = new ReminderService(List.of(mockObserver, secondObserver), borrowService);
+
+        User user = new User("U02", "Jane", "jane@test.com", "USER");
+        when(borrowService.getUsersWithOverdueLoans()).thenReturn(List.of(user));
+        when(borrowService.countOverdueLoansForUser(user)).thenReturn(1);
+
+
+        reminderService.sendReminders();
+
+
+        verify(mockObserver).notify(eq(user), anyString());
+        verify(secondObserver).notify(eq(user), anyString());
     }
 }

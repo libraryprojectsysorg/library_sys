@@ -7,7 +7,6 @@
 package org.library.Service.Strategy;
 
 import org.library.Domain.*;
-import org.library.Service.Strategy.BookService;
 
 import java.io.*;
 import java.time.LocalDate;
@@ -17,7 +16,13 @@ import java.util.Optional;
 
 public class LoanFileHandler {
 
-    private static final String LOANS_FILE = "loans.txt";
+
+    private static String LOANS_FILE = "loans.txt";
+
+
+    public static void setLoansFile(String filePath) {
+        LOANS_FILE = filePath;
+    }
 
     public List<Loan> loadAllLoans() {
         List<Loan> loans = new ArrayList<>();
@@ -85,19 +90,46 @@ public class LoanFileHandler {
     }
 
     private Media findMediaByIsbn(String isbn) {
-        BookService bookService = new BookService();
-        List<Book> books = bookService.searchBooks(isbn);
-        Optional<Book> result = books.stream()
+        BookCDService bookCDService = new BookCDService();
+
+
+        List<Book> books = bookCDService.searchBooks(isbn);
+        Optional<Book> foundBook = books.stream()
                 .filter(b -> b.getIsbn().equals(isbn))
                 .findFirst();
-        return result.orElse(null);
+        if (foundBook.isPresent()) {
+            return foundBook.get();
+        }
+
+
+        List<CD> cds = bookCDService.searchCD(isbn);
+        Optional<CD> foundCD = cds.stream()
+                .filter(cd -> cd.getIsbn().equals(isbn))
+                .findFirst();
+
+        return foundCD.orElse(null);
     }
 
+
     private User findUserById(String userId) {
-        List<User> users = UserFileHandler.loadAllUsers(); // افترض إن عندك UserFileHandler
+        List<User> users = UserFileHandler.loadAllUsers();
         return users.stream()
                 .filter(u -> u.getId().equals(userId))
                 .findFirst()
                 .orElse(null);
     }
+
+
+
+    public boolean isMediaBorrowed(String mediaIsbn) {
+            List<Loan> loans = loadAllLoans();
+            for (Loan loan : loans) {
+
+                if (loan.getMedia().getIsbn().equals(mediaIsbn) && !loan.isReturned()) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
 }

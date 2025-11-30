@@ -1,7 +1,4 @@
-s12217663@stu.najah.edu,ws1234,ADMIN,A001,Library Admin
-demo@example.com,pass123,USER,U001,Demo User
-s12217663@stu.najah.edu,123456,USER,U283E5,وئام اياد احمد
-s12214554@stu.najah.edu,456789,USER,U8FB71,احمد صالح محمد
 s12217663@stu.najah.edu,hcqn vhpj tlxr xuqk,ADMIN,A001,Library Admin
-s12217424@stu.najah.edu,er1234,USER,U1A2F7,صبا عبد  الجواد
-s12217424@stu.najah.edu,pass123,USER,U001,Demo User
+s12217424@stu.najah.edu,giuh bkld uxoj kimn,SUPER_ADMIN,SA001,Library Super Admin
+weam4732@gmail.com,456,USER,UD3A7D,سارة احمد
+

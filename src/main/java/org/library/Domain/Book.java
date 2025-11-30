@@ -9,7 +9,7 @@ import org.library.Service.Strategy.fines.FineStrategy;
  * @author  Seba Abd Aljwwad
  * @version 1.0
  */
-public class Book extends Media {  // Extend Media for Sprint 5 polymorphism
+public class Book extends Media {
     /**
      * Constructor for Book (US1.3).
      * @param title the book title
@@ -18,7 +18,7 @@ public class Book extends Media {  // Extend Media for Sprint 5 polymorphism
      * @throws IllegalArgumentException if invalid details
      */
     public Book(String title, String author, String isbn) {
-        super(title, author, isbn);  // Call super (Media constructor)
+        super(title, author, isbn);
     }
 
     /**
@@ -27,7 +27,7 @@ public class Book extends Media {  // Extend Media for Sprint 5 polymorphism
      */
     @Override
     public int getLoanDays() {
-        return 1;  // Book: +28 days
+        return 1;
     }
 
     /**
@@ -37,14 +37,14 @@ public class Book extends Media {  // Extend Media for Sprint 5 polymorphism
     @Override
     public FineStrategy getFineStrategy()
     {
-        return new BookFineStrategy();  // 10 NIS/day
+        return new BookFineStrategy();
     }
 
     @Override
     public int getDailyFineRate(String userRole) {
         if ("SUPER_ADMIN".equalsIgnoreCase(userRole)) return 0;
         if ("LIBRARIAN".equalsIgnoreCase(userRole) || "ADMIN".equalsIgnoreCase(userRole)) return 5;
-        return 10; // Default (User)
+        return 10;
     }
 
 

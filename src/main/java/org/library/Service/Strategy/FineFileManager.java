@@ -5,14 +5,14 @@ import org.library.Domain.User;
 
 import java.io.*;
 import java.util.ArrayList;
-import java.util.Iterator;
+
 import java.util.List;
 
 public class FineFileManager {
 
     private static final String FILE_PATH = "fines.txt";
 
-    // تحميل الغرامات من الملف
+
     public static void loadFines(User user) {
         File file = new File(FILE_PATH);
         if (!file.exists()) return;
@@ -34,7 +34,7 @@ public class FineFileManager {
         }
     }
 
-    // حفظ الغرامات الحالية إلى الملف (استبدال الملف بالمحتوى الجديد)
+
     public static void saveAllFines(List<User> users) {
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(FILE_PATH))) {
             for (User user : users) {
@@ -48,7 +48,7 @@ public class FineFileManager {
         }
     }
 
-    // حذف الغرامات المدفوعة فقط
+
     public static void removePaidFines(User user) {
         File file = new File(FILE_PATH);
         if (!file.exists()) return;
@@ -61,7 +61,7 @@ public class FineFileManager {
                 String[] parts = line.split(",");
                 if (parts.length == 3 && parts[0].equals(user.getName())) {
                     boolean isPaid = Boolean.parseBoolean(parts[2]);
-                    if (!isPaid) remainingLines.add(line); // فقط الغير مدفوعة
+                    if (!isPaid) remainingLines.add(line);
                 } else {
                     remainingLines.add(line);
                 }
