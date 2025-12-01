@@ -25,7 +25,8 @@ public class CD extends Media {
      * * @return .
      */
     @Override
-    public int getLoanDays() {
+    public int getLoanDays()
+    {
         return 7;
     }
 
