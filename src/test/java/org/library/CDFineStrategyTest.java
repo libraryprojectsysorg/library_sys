@@ -1,22 +1,22 @@
 package org.library;
 
 import org.junit.jupiter.api.Test;
-import org.library.Service.Strategy.fines.BookFineStrategy;
+import org.library.Service.Strategy.fines.CDFineStrategy;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-class BookFineStrategyTest {
+class CDFineStrategyTest {
 
-    private final BookFineStrategy strategy = new BookFineStrategy();
+    private final CDFineStrategy strategy = new CDFineStrategy();
 
     @Test
     void shouldCalculateCorrectFineForPositiveOverdueDays() {
         int overdueDays = 5;
-        int expectedFine = 50;
+        int expectedFine = 100; // 20 * 5
 
         int actualFine = strategy.calculateFine(overdueDays);
 
-        assertEquals(expectedFine, actualFine, "الغرامة يجب أن تكون 50 عند التأخير لمدة 5 أيام");
+        assertEquals(expectedFine, actualFine, "الغرامة يجب أن تكون 100 عند التأخير لمدة 5 أيام");
     }
 
     @Test
@@ -32,17 +32,17 @@ class BookFineStrategyTest {
     @Test
     void shouldHandleNegativeOverdueDaysGracefully() {
         int overdueDays = -3;
-        int expectedFine = -30;
+        int expectedFine = -60; // 20 * -3
 
         int actualFine = strategy.calculateFine(overdueDays);
 
-        assertEquals(expectedFine, actualFine, "الغرامة لأي قيمة سالبة من أيام التأخير يجب أن تكون سالب");
+        assertEquals(expectedFine, actualFine, "الغرامة لأي قيمة سالبة من أيام التأخير يجب أن تكون سالبة");
     }
 
     @Test
     void shouldHandleLargeNumberOfOverdueDays() {
         int overdueDays = 1000;
-        int expectedFine = 10000;
+        int expectedFine = 20000; // 20 * 1000
 
         int actualFine = strategy.calculateFine(overdueDays);
 

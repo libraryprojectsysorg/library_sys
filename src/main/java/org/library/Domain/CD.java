@@ -27,7 +27,9 @@ public class CD extends Media {
     @Override
     public int getLoanDays()
     {
+
         return 7;
+
     }
 
     /**

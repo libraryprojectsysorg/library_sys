@@ -68,7 +68,7 @@ public class AuthAdmin {
         loggedInRole = null;
     }
 
-    public void showAdminMenu(Scanner scanner) {
+  public void showAdminMenu(Scanner scanner) {
         if (!isLoggedInAdmin()) {
             System.out.println("❌ هذه القائمة مخصصة للمدراء فقط.");
             return;
@@ -114,7 +114,6 @@ public class AuthAdmin {
             else handleAdminChoice(choice, scanner);
         }
     }
-
     private void handleSuperAdminChoice(int choice, Scanner scanner) {
         switch (choice) {
             case 1 -> addBookInteractive(scanner);
@@ -158,7 +157,7 @@ public class AuthAdmin {
 
     }
 
-    // ======== العمليات ========
+
     private void addAdminInteractive(Scanner scanner) {
         System.out.print("Email: "); String email = scanner.nextLine().trim();
         System.out.print("Password: "); String pass = scanner.nextLine().trim();
