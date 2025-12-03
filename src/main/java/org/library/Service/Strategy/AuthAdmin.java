@@ -18,10 +18,9 @@ public class AuthAdmin {
     private final ReminderService reminderService;
     private final FineCalculator fineCalculator;
 
-    private static final Dotenv dotenv = Dotenv.load();
-    private static final String SUPER_ADMIN_EMAIL = dotenv.get("ADMIN_EMAIL");
-    private static final String SUPER_ADMIN_PASS = dotenv.get("ADMIN_PASS");
 
+    private static final String SUPER_ADMIN_EMAIL = System.getenv("ADMIN_EMAIL") != null ? System.getenv("ADMIN_EMAIL") : "default_super@library.com";
+    private static final String SUPER_ADMIN_PASS = System.getenv("ADMIN_PASS") != null ? System.getenv("ADMIN_PASS") : "default_superpass123";
     public enum Role { SUPER_ADMIN, ADMIN ,USER}
 
     public AuthAdmin(BorrowService borrowService, ReminderService reminderService, FineCalculator fineCalculator, BookCDService bookCDService) {
