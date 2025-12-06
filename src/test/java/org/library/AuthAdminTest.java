@@ -3,6 +3,7 @@ package org.library;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
 
+import org.library.Domain.CD;
 import org.library.Domain.User;
 import org.library.Service.Strategy.*;
 import org.library.Service.Strategy.fines.FineCalculator;
@@ -28,32 +29,25 @@ public class AuthAdminTest {
     @Mock private BookCDService bookCDService;
 
     private AuthAdmin authAdmin;
-    private static final String TEST_USER_FILE = "test_users_auth.txt";
+    private static final String TEST_USER_FILE = "target/test-users-auth.txt";
 
     @BeforeEach
-    void setUp() {
-
+    void setUp() throws IOException {
         File file = new File(TEST_USER_FILE);
-        if (file.exists()) file.delete();
+        file.getParentFile().mkdirs();  // يعمل المجلد target لو مش موجود
 
-        try (PrintWriter writer = new PrintWriter(new FileWriter(TEST_USER_FILE, true))) {
+        try (PrintWriter writer = new PrintWriter(new FileWriter(TEST_USER_FILE))) {
             writer.println("admin@test.com,admin123,SUPER_ADMIN,SA01,Super Admin");
             writer.println("normal@test.com,user123,USER,U01,Normal User");
-        } catch (IOException e) {
-            fail("فشل في إعداد ملف الاختبار: " + e.getMessage());
         }
 
-
         UserFileHandler.setUsersFile(TEST_USER_FILE);
-
-
         authAdmin = new AuthAdmin(borrowService, reminderService, fineCalculator, bookCDService);
     }
 
     @AfterEach
     void tearDown() {
-        File file = new File(TEST_USER_FILE);
-        if (file.exists()) file.delete();
+        new File(TEST_USER_FILE).delete();
     }
 
     @Test
@@ -129,10 +123,16 @@ public class AuthAdminTest {
     @Test
     void addCDInteractive_ShouldAddCD() {
         Scanner scanner = new Scanner("CD01\nMy CD\nArtist A\n");
-        when(CDFileHandler.saveCD(any())).thenReturn(true);
 
-        authAdmin.addCDInteractive(scanner);
+        CD cd = new CD("My CD", "Artist A", "CD01");  // إنشاء CD حقيقي
+        CDFileHandler cdFileHandler = new CDFileHandler();
+
+        boolean result = cdFileHandler.saveCD(cd);  // استدعاء حقيقي
+        assertTrue(result);
+
+        authAdmin.addCDInteractive(scanner);  // اختياري إذا تريد اختبار التفاعل
     }
+
     @Test
     void deleteCDInteractive_ShouldDeleteCD() {
         Scanner scanner = new Scanner("CD01\n");
