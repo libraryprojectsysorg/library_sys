@@ -141,5 +141,28 @@ public class AuthAdminTest {
         authAdmin.deleteCDInteractive(scanner);
     }
 
+    @Test
+    void loginWithNullEmail_ShouldFail() {
+        assertFalse(authAdmin.login(null, "admin123"));
+    }
 
+    @Test
+    void loginWithEmptyPassword_ShouldFail() {
+        assertFalse(authAdmin.login("admin@test.com", ""));
+    }
+
+    @Test
+    void isLoggedInAdmin_WhenUserLoggedIn_ShouldReturnFalse() {
+        authAdmin.login("normal@test.com", "user123");
+        assertFalse(authAdmin.isLoggedInAdmin());
+    }
+
+    @Test
+    void multipleLoginAttempts_ShouldKeepLastState() {
+        authAdmin.login("normal@test.com", "user123");
+        assertTrue(authAdmin.isLoggedInUser());
+
+        authAdmin.login("admin@test.com", "admin123");
+        assertTrue(authAdmin.isSuperAdmin());
+    }
 }
