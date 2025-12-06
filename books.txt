@@ -1,4 +1,0 @@
-soft,haya,159
-java,haya,562
-c++,Asmaa,423
-c++,asmaa,112

@@ -16,7 +16,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class BookFileHandlerTest {
 
-    private static final String TEST_FILE_PATH = "test_books_db.txt";
+    private static final String TEST_FILE_PATH = "books.txt";
 
     @BeforeEach
     void setUp() {

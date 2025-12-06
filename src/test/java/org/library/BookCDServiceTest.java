@@ -16,7 +16,7 @@ class BookCDServiceTest {
 
     private BookCDService service;
     private List<Book> testBooks;
-    private static final String TEST_FILE = "test-books.txt";
+    private static final String TEST_FILE = "books.txt";
 
     @BeforeEach
     void setUp() {
@@ -25,7 +25,8 @@ class BookCDServiceTest {
         testBooks.add(new Book("Clean Code", "Robert Martin", "222"));
         testBooks.add(new Book("Advanced Java", "Jane Smith", "333"));
 
-        service = new BookCDService(testBooks);
+        service = new BookCDService(testBooks, null);
+
 
 
         File f = new File(TEST_FILE);
@@ -67,7 +68,7 @@ class BookCDServiceTest {
 
     @Test
     void shouldAddBook_WhenBooksNull() {
-        BookCDService nullService = new BookCDService(null);
+        BookCDService nullService = new BookCDService(null,null);
         boolean added = nullService.addBook("File Book", "File Author", "999");
         assertTrue(added);
 
@@ -77,7 +78,7 @@ class BookCDServiceTest {
 
     @Test
     void shouldFailAddBook_WhenIsbnExistsInFile() {
-        BookCDService nullService = new BookCDService(null);
+        BookCDService nullService = new BookCDService(null,null);
         nullService.addBook("Book1", "Author1", "AAA");
         boolean added = nullService.addBook("Book2", "Author2", "AAA"); // ISBN مكرر
         assertFalse(added);
@@ -106,7 +107,7 @@ class BookCDServiceTest {
 
     @Test
     void shouldRemoveBook_WhenBooksNull() {
-        BookCDService nullService = new BookCDService(null);
+        BookCDService nullService = new BookCDService(null,null);
         nullService.addBook("Book1", "Author1", "AAA");
         boolean removed = nullService.removeByIsbn("AAA");
         assertTrue(removed);
@@ -122,9 +123,9 @@ class BookCDServiceTest {
     }
 
     @Test
-    void shouldReturnEmptyList_WhenQueryIsNull() {
+    void shouldReturnAllBooks_WhenQueryIsNull() {
         List<Book> result = service.searchBooks(null);
-        assertTrue(result.isEmpty());
+        assertEquals(testBooks.size(), result.size());
     }
 
     @Test
@@ -154,7 +155,7 @@ class BookCDServiceTest {
 
     @Test
     void shouldSearchBooks_WhenBooksNull() {
-        BookCDService nullService = new BookCDService(null);
+        BookCDService nullService = new BookCDService(null,null);
         nullService.addBook("Book1", "Author1", "AAA");
         List<Book> result = nullService.searchBooks("Book1");
         assertEquals(1, result.size());

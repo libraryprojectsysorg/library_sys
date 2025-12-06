@@ -38,10 +38,13 @@ jobs:
                   key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
                   restore-keys: ${{ runner.os }}-m2
 
-            - name: Create .env file for tests
-              run: |
-                  echo "ADMIN_EMAIL=${{ secrets.ADMIN_EMAIL }}" > .env
-                  echo "ADMIN_PASS=${{ secrets.ADMIN_PASS }}" >> .env
+            -   name: Create .env file for tests
+                run: |
+                    echo "ADMIN_EMAIL=$ADMIN_EMAIL" > .env
+                    echo "ADMIN_PASS=$ADMIN_PASS" >> .env
+                env:
+                    ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+                    ADMIN_PASS: ${{ secrets.ADMIN_PASS }}
 
             -   name: Build and analyze
                 env:
