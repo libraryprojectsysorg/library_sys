@@ -1,8 +1,7 @@
 name: SonarQube
 on:
     push:
-        branches:
-            - main
+        branches: [ main ]
     pull_request:
         types: [opened, synchronize, reopened]
 
@@ -10,19 +9,16 @@ jobs:
     build:
         name: Build and analyze
         runs-on: ubuntu-latest
-        env:
-            ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
-            ADMIN_PASS: ${{ secrets.ADMIN_PASS }}
         steps:
             - uses: actions/checkout@v4
               with:
-                  fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+                  fetch-depth: 0
 
             - name: Set up JDK 17
               uses: actions/setup-java@v4
               with:
                   java-version: 17
-                  distribution: 'zulu' # Alternative distribution options are available.
+                  distribution: zulu
 
             - name: Cache SonarQube packages
               uses: actions/cache@v4
@@ -38,20 +34,12 @@ jobs:
                   key: ${{ runner.os }}-m2-${{ hashFiles('**/pom.xml') }}
                   restore-keys: ${{ runner.os }}-m2
 
-            -   name: Create .env file for tests
-                run: |
-                    echo "ADMIN_EMAIL=$ADMIN_EMAIL" > .env
-                    echo "ADMIN_PASS=$ADMIN_PASS" >> .env
-                env:
-                    ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
-                    ADMIN_PASS: ${{ secrets.ADMIN_PASS }}
+            - name: Create .env file
+              run: |
+                  echo "ADMIN_EMAIL=${{ secrets.ADMIN_EMAIL }}" > .env
+                  echo "ADMIN_PASS=${{ secrets.ADMIN_PASS }}" >> .env
 
-            -   name: Build and analyze
-                env:
-                    SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-                run: mvn -B clean verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar \
-                    -Dsonar.projectKey=libraryprojectsorg_library_sys \
-                    -Dsonar.organization=libraryprojectsorg \
-                    -Dsonar.host.url=https://sonarcloud.io \
-                    -Dsonar.sources=src/main/java \
-                    -Dsonar.tests=src/test/java
+            - name: Build and analyze with SonarCloud
+              env:
+                  SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+              run: mvn -B clean verify sonar:sonar
