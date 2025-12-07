@@ -354,4 +354,47 @@ public class AuthAdmin {
     public User findUserById(String id) {
         return users.stream().filter(u -> u.getId().equals(id)).findFirst().orElse(null);
     }
-}
+    // ======= Logic Methods (بدون طباعة) - هتختبرهم في الـ tests =======
+
+    public boolean addAdmin(String email, String password, String id, String name) {
+        return UserFileHandler.saveUser(email, password, "ADMIN", id, name);
+    }
+
+    public boolean deleteAdmin(String id) {
+        User user = findUserById(id);
+        if (user == null || !user.getRole().equalsIgnoreCase("ADMIN")) return false;
+        boolean removed = UserFileHandler.removeUserById(id, loggedInRole.name());
+        if (removed) users.remove(user);
+        return removed;
+    }
+
+    public boolean unregisterUser(String userId) {
+        User user = findUserById(userId);
+        if (user == null || user.getRole().equalsIgnoreCase("SUPER_ADMIN") || user.getRole().equalsIgnoreCase("ADMIN")) {
+            return false;
+        }
+        if (borrowService.hasActiveLoans(user) || user.hasUnpaidFines()) return false;
+        borrowService.unregisterUser(userId);
+        boolean removed = UserFileHandler.removeUserById(userId, loggedInRole.name());
+        if (removed) users.remove(user);
+        return removed;
+    }
+
+    public int getUserTotalFine(String userId) {
+        User user = findUserById(userId);
+        if (user == null) return -1;
+        FineFileManager.loadFines(user);
+        return fineCalculator.calculateTotalFine(user);
+    }
+
+    public boolean payAllUserFines(User user) {
+        if (user == null || user.getFines().isEmpty()) return false;
+        for (Fine f : user.getFines()) {
+            if (!f.isPaid()) user.payFine(f);
+        }
+        FineFileManager.removePaidFines(user);
+        return true;
+    }
+
+    }
+

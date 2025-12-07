@@ -132,4 +132,73 @@ class AuthAdminTest {
         assertEquals("admin@test.com", user.getEmail());
         assertEquals("Super Admin", user.getName());
     }
+    @Test
+    void addAdmin_ShouldReturnTrueWhenAdded() {
+        // نجبر النظام يفكر إننا super admin
+        setPrivateField("loggedInRole", AuthAdmin.Role.SUPER_ADMIN);
+        setPrivateField("isLoggedIn", true);
+
+        boolean result = authAdmin.addAdmin("newadmin@test.com", "pass123", "A001", "New Admin");
+
+        assertTrue(result);
+    }
+
+    @Test
+    void deleteAdmin_ShouldReturnTrueWhenDeleted() {
+        setPrivateField("loggedInRole", AuthAdmin.Role.SUPER_ADMIN);
+        setPrivateField("isLoggedIn", true);
+
+        // نضيف أدمن عشان نحذفه
+        authAdmin.addAdmin("todelete@test.com", "pass", "DEL001", "Delete Me");
+        authAdmin.loadUsers(); // مهم جدًا
+
+        boolean result = authAdmin.deleteAdmin("DEL001");
+
+        assertTrue(result);
+    }
+
+    @Test
+    void unregisterUser_ShouldReturnTrue() {
+        setPrivateField("loggedInRole", AuthAdmin.Role.SUPER_ADMIN);
+        setPrivateField("isLoggedIn", true);
+
+        // نضيف يوزر عادي
+        UserFileHandler.saveUser("user@test.com", "pass", "USER", "U999", "Test User");
+        authAdmin.loadUsers();
+
+        boolean result = authAdmin.unregisterUser("U999");
+
+        assertTrue(result);
+    }
+
+    @Test
+    void getUserTotalFine_ShouldReturnCorrectAmount() {
+
+        UserFileHandler.saveUser("fineuser@test.com", "pass", "USER", "F001", "Fine User");
+        authAdmin.loadUsers();
+
+        int fine = authAdmin.getUserTotalFine("F001");
+
+        assertEquals(0, fine);
+    }
+
+    @Test
+    void payAllUserFines_ShouldClearFines() {
+        UserFileHandler.saveUser("payuser@test.com", "pass", "USER", "P001", "Pay User");
+        authAdmin.loadUsers();
+        User user = authAdmin.findUserById("P001");
+
+        boolean paid = authAdmin.payAllUserFines(user);
+
+        assertFalse(paid);
+    }
+    private void setPrivateField(String fieldName, Object value) {
+        try {
+            java.lang.reflect.Field field = AuthAdmin.class.getDeclaredField(fieldName);
+            field.setAccessible(true);
+            field.set(authAdmin, value);
+        } catch (Exception e) {
+            throw new RuntimeException("Failed to set field: " + fieldName, e);
+        }
+    }
 }
