@@ -85,7 +85,7 @@ public class AuthAdmin {
         loggedInRole = null;
     }
 
-   /* public void showAdminMenu(Scanner scanner) {
+    public void showAdminMenu(Scanner scanner) {
         if (!isLoggedInAdmin()) {
             System.out.println("❌ هذه القائمة مخصصة للمدراء فقط.");
             return;
@@ -228,7 +228,7 @@ public class AuthAdmin {
         new EmailNotifier(new RealEmailServer()).notify(targetUser, message);
         System.out.println("✅ Email sent.");
     }
-*/
+
     // ======= Book & CD Operations =======
 
     public void addBookInteractive(Scanner scanner) {
@@ -276,7 +276,7 @@ public class AuthAdmin {
 
     // ======= Borrow & Return =======
 
-/*    public void borrowBookInteractive(Scanner scanner) {
+  public void borrowBookInteractive(Scanner scanner) {
         System.out.println("\n=== استعارة كتاب ===");
         System.out.print("أدخل اسم الكتاب الذي تريد استعارته: "); String title = scanner.nextLine().trim();
         List<Book> matchingBooks = bookCDService.searchBooks(title);
@@ -347,14 +347,14 @@ public class AuthAdmin {
                 System.out.println("✅ تم دفع جميع الغرامات للادمين: " + user.getName());
             } else System.out.println("تم إلغاء الدفع.");
         } else System.out.println("الادمين ليس لديه غرامات مستحقة.");
-    }*/
+    }
 
 
 
     public User findUserById(String id) {
         return users.stream().filter(u -> u.getId().equals(id)).findFirst().orElse(null);
     }
-    // ======= Logic Methods (بدون طباعة) - هتختبرهم في الـ tests =======
+
 
     public boolean addAdmin(String email, String password, String id, String name) {
         return UserFileHandler.saveUser(email, password, "ADMIN", id, name);

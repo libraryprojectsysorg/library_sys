@@ -2,8 +2,6 @@ package org.library;
 
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.library.Domain.Book;
-import org.library.Domain.CD;
 import org.library.Domain.User;
 import org.library.Service.Strategy.*;
 import org.library.Service.Strategy.fines.FineCalculator;
@@ -32,8 +30,12 @@ class AuthAdminTest {
 
     private static final Path TEST_USER_FILE = Path.of("target", "test-users.txt");
 
+
+
     @BeforeEach
     void setUp() throws IOException {
+
+
         Files.createDirectories(TEST_USER_FILE.getParent());
         Files.writeString(TEST_USER_FILE, """
         admin@test.com,admin123,SUPER_ADMIN,SA01,Super Admin
@@ -48,6 +50,7 @@ class AuthAdminTest {
 
     @AfterEach
     void tearDown() throws IOException {
+
         Files.deleteIfExists(TEST_USER_FILE);
     }
 
@@ -135,8 +138,8 @@ class AuthAdminTest {
     @Test
     void addAdmin_ShouldReturnTrueWhenAdded() {
         // نجبر النظام يفكر إننا super admin
-        setPrivateField("loggedInRole", AuthAdmin.Role.SUPER_ADMIN);
-        setPrivateField("isLoggedIn", true);
+        setPrivateField(authAdmin, "loggedInRole", AuthAdmin.Role.SUPER_ADMIN);
+        setPrivateField(authAdmin, "isLoggedIn", true);
 
         boolean result = authAdmin.addAdmin("newadmin@test.com", "pass123", "A001", "New Admin");
 
@@ -145,8 +148,8 @@ class AuthAdminTest {
 
     @Test
     void deleteAdmin_ShouldReturnTrueWhenDeleted() {
-        setPrivateField("loggedInRole", AuthAdmin.Role.SUPER_ADMIN);
-        setPrivateField("isLoggedIn", true);
+        setPrivateField(authAdmin, "loggedInRole", AuthAdmin.Role.SUPER_ADMIN);
+        setPrivateField(authAdmin, "isLoggedIn", true);
 
         // نضيف أدمن عشان نحذفه
         authAdmin.addAdmin("todelete@test.com", "pass", "DEL001", "Delete Me");
@@ -159,8 +162,8 @@ class AuthAdminTest {
 
     @Test
     void unregisterUser_ShouldReturnTrue() {
-        setPrivateField("loggedInRole", AuthAdmin.Role.SUPER_ADMIN);
-        setPrivateField("isLoggedIn", true);
+        setPrivateField(authAdmin, "loggedInRole", AuthAdmin.Role.SUPER_ADMIN);
+        setPrivateField(authAdmin, "isLoggedIn", true);
 
         // نضيف يوزر عادي
         UserFileHandler.saveUser("user@test.com", "pass", "USER", "U999", "Test User");
@@ -192,11 +195,38 @@ class AuthAdminTest {
 
         assertFalse(paid);
     }
-    private void setPrivateField(String fieldName, Object value) {
+    @Test
+    void authAdminMenu_ShouldNotCrash() {
+
+        setPrivateField(authAdmin, "isLoggedIn", true);
+        setPrivateField(authAdmin, "loggedInRole", AuthAdmin.Role.SUPER_ADMIN);
+
+
+        authAdmin.showAdminMenu(new Scanner("16\n")); // نختار Logout عشان يطلع
+    }
+
+    @Test
+    void borrowAndReturnBook_ShouldWork() {
+        setPrivateField(authAdmin, "isLoggedIn", true);
+        setPrivateField(authAdmin, "loggedInRole", AuthAdmin.Role.ADMIN);
+
+
+        authAdmin.borrowBookInteractive(new Scanner("Test Book\nSA01\n"));
+        authAdmin.returnBookInteractive(new Scanner("Test Book\n"));
+    }
+
+    @Test
+    void payFine_ShouldRun() {
+        setPrivateField(authAdmin, "isLoggedIn", true);
+        setPrivateField(authAdmin, "loggedInRole", AuthAdmin.Role.ADMIN);
+
+        authAdmin.payFineForUserInteractive(new Scanner("admin@test.com\ny\n123456789\n"));
+    }
+    private void setPrivateField(AuthAdmin authAdmin, String fieldName, Object value) {
         try {
             java.lang.reflect.Field field = AuthAdmin.class.getDeclaredField(fieldName);
             field.setAccessible(true);
-            field.set(authAdmin, value);
+            field.set(this.authAdmin, value);
         } catch (Exception e) {
             throw new RuntimeException("Failed to set field: " + fieldName, e);
         }
