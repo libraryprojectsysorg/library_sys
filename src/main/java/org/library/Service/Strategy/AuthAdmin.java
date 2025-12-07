@@ -85,7 +85,7 @@ public class AuthAdmin {
         loggedInRole = null;
     }
 
-    public void showAdminMenu(Scanner scanner) {
+   /* public void showAdminMenu(Scanner scanner) {
         if (!isLoggedInAdmin()) {
             System.out.println("❌ هذه القائمة مخصصة للمدراء فقط.");
             return;
@@ -228,7 +228,7 @@ public class AuthAdmin {
         new EmailNotifier(new RealEmailServer()).notify(targetUser, message);
         System.out.println("✅ Email sent.");
     }
-
+*/
     // ======= Book & CD Operations =======
 
     public void addBookInteractive(Scanner scanner) {
