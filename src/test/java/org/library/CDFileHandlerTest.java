@@ -20,7 +20,7 @@ class CDFileHandlerTest {
     @BeforeEach
     void setUp() {
         testFilePath = tempDir.resolve("cds_test.txt").toString();
-        CDFileHandler.setCdsFile(testFilePath); // نستخدم ملف مؤقت
+        CDFileHandler.setCdsFile(testFilePath);
     }
 
     @Test
@@ -40,7 +40,7 @@ class CDFileHandlerTest {
         CD cd = new CD("Back in Black", "AC/DC", "CD002");
         CDFileHandler.saveCD(cd);
 
-        boolean result = CDFileHandler.saveCD(cd); // نفس الكود
+        boolean result = CDFileHandler.saveCD(cd);
 
         assertFalse(result);
         assertEquals(1, CDFileHandler.loadAllCDs().size());

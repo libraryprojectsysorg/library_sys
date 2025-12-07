@@ -10,7 +10,7 @@ import java.util.List;
 
 public class FineFileManager {
 
-    private static final String FILE_PATH = "fines.txt";
+    private static  String FILE_PATH = "fines.txt";
 
 
     public static void loadFines(User user) {
