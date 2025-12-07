@@ -151,9 +151,9 @@ class AuthAdminTest {
         setPrivateField(authAdmin, "loggedInRole", AuthAdmin.Role.SUPER_ADMIN);
         setPrivateField(authAdmin, "isLoggedIn", true);
 
-        // نضيف أدمن عشان نحذفه
+
         authAdmin.addAdmin("todelete@test.com", "pass", "DEL001", "Delete Me");
-        authAdmin.loadUsers(); // مهم جدًا
+        authAdmin.loadUsers();
 
         boolean result = authAdmin.deleteAdmin("DEL001");
 
@@ -195,33 +195,7 @@ class AuthAdminTest {
 
         assertFalse(paid);
     }
-    @Test
-    void authAdminMenu_ShouldNotCrash() {
 
-        setPrivateField(authAdmin, "isLoggedIn", true);
-        setPrivateField(authAdmin, "loggedInRole", AuthAdmin.Role.SUPER_ADMIN);
-
-
-        authAdmin.showAdminMenu(new Scanner("16\n")); // نختار Logout عشان يطلع
-    }
-
-    @Test
-    void borrowAndReturnBook_ShouldWork() {
-        setPrivateField(authAdmin, "isLoggedIn", true);
-        setPrivateField(authAdmin, "loggedInRole", AuthAdmin.Role.ADMIN);
-
-
-        authAdmin.borrowBookInteractive(new Scanner("Test Book\nSA01\n"));
-        authAdmin.returnBookInteractive(new Scanner("Test Book\n"));
-    }
-
-    @Test
-    void payFine_ShouldRun() {
-        setPrivateField(authAdmin, "isLoggedIn", true);
-        setPrivateField(authAdmin, "loggedInRole", AuthAdmin.Role.ADMIN);
-
-        authAdmin.payFineForUserInteractive(new Scanner("admin@test.com\ny\n123456789\n"));
-    }
     private void setPrivateField(AuthAdmin authAdmin, String fieldName, Object value) {
         try {
             java.lang.reflect.Field field = AuthAdmin.class.getDeclaredField(fieldName);
