@@ -122,14 +122,14 @@ public class LoanFileHandler {
 
 
     public boolean isMediaBorrowed(String mediaIsbn) {
-            List<Loan> loans = loadAllLoans();
-            for (Loan loan : loans) {
+        List<Loan> loans = loadAllLoans();
+        for (Loan loan : loans) {
 
-                if (loan.getMedia().getIsbn().equals(mediaIsbn) && !loan.isReturned()) {
-                    return true;
-                }
+            if (loan.getMedia().getIsbn().equals(mediaIsbn) && !loan.isReturned()) {
+                return true;
             }
-            return false;
         }
+        return false;
+    }
 
 }

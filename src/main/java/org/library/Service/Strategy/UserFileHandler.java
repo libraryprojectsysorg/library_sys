@@ -46,6 +46,7 @@ public class UserFileHandler {
     public static List<User> loadAllUsers() {
         List<User> users = new ArrayList<>();
 
+
         try (BufferedReader reader = new BufferedReader(new FileReader(USERS_FILE))) {
             String line;
             while ((line = reader.readLine()) != null) {

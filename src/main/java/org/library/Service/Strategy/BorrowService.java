@@ -1,7 +1,3 @@
-/**
- * @author Weam Ahmad
- * @author Seba Abd Aljwwad
- */
 package org.library.Service.Strategy;
 
 import org.library.Domain.*;
@@ -9,7 +5,6 @@ import java.time.Clock;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
-
 
 public class BorrowService {
 
@@ -21,7 +16,6 @@ public class BorrowService {
         this.emailNotifier = emailNotifier;
         this.loanFileHandler = loanFileHandler;
     }
-
 
     public BorrowService(EmailNotifier emailNotifier) {
         this(emailNotifier, new LoanFileHandler());
@@ -38,8 +32,6 @@ public class BorrowService {
         if (user.hasUnpaidFines() || hasOverdueLoans(user)) {
             throw new RuntimeException("Cannot borrow: overdue books or unpaid fines");
         }
-
-
         if (loanFileHandler.isMediaBorrowed(media.getIsbn())) {
             throw new RuntimeException("This item is already borrowed by another user.");
         }
@@ -54,38 +46,23 @@ public class BorrowService {
         return loan;
     }
 
-
     public int returnMedia(String loanId) {
         List<Loan> activeLoans = getLoans();
-
-
         Loan loan = activeLoans.stream()
                 .filter(l -> l.getLoanId().equals(loanId))
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Loan not found in active loans."));
-
-
         activeLoans.remove(loan);
-
-
         loanFileHandler.rewriteAllLoans(activeLoans);
-
-
         loan.getMedia().setAvailable(true);
-
-
         int fineAmount = calculateFineForLoan(loan);
-
         if (fineAmount > 0) {
             Fine fine = new Fine(fineAmount);
-
             FineFileManager.addFineForUser(loan.getUser(), fine);
             System.out.println("⚠️ تم إضافة غرامة للمستخدم: " + fineAmount + " NIS");
         }
-
         return fineAmount;
     }
-
 
     public boolean hasActiveLoans(User user) {
         return getLoans().stream().anyMatch(l -> l.getUser().equals(user));
@@ -127,8 +104,6 @@ public class BorrowService {
         return getLoans().stream().anyMatch(l -> l.getUser().equals(user) && isOverdue(l));
     }
 
-
-
     public List<User> getUsersWithOverdueLoans() {
         return getLoans().stream()
                 .filter(this::isOverdue)
@@ -143,18 +118,14 @@ public class BorrowService {
                 .count();
     }
 
-
-
     public void setClock(Clock mockClock) {
         this.clock = mockClock;
     }
+
     public Loan borrowCD(CD cd, User user) {
         if (cd == null || user == null) {
             throw new IllegalArgumentException("Invalid CD or user.");
         }
         return borrowMedia(cd, user);
     }
-
-
-
 }

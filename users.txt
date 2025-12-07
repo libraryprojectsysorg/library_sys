@@ -2,8 +2,6 @@ s12217663@stu.najah.edu,hcqn vhpj tlxr xuqk,ADMIN,A001,Library Admin
 s12217424@stu.najah.edu,giuh bkld uxoj kimn,SUPER_ADMIN,SA001,Library Super Admin
 weam4732@gmail.com,456,USER,UD3A7D,سارة احمد
 
-admin@test.com,1234,ADMIN,A1,Test Admin
-admin@test.com,1234,ADMIN,A1,Test Admin
-admin@test.com,1234,ADMIN,A1,Test Admin
-admin@test.com,1234,ADMIN,A1,Test Admin
-admin@test.com,1234,ADMIN,A1,Test Admin
+
+
+default_super@library.com,default_superpass123,USER,SA001,Library Super Admin
