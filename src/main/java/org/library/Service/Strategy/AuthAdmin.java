@@ -32,16 +32,16 @@ public class AuthAdmin {
         this.fineCalculator = fineCalculator;
         this.bookCDService = bookCDService;
 
-        // نضمن وجود السوبر أدمن أولاً (بيستخدم الملف الافتراضي أو اللي محدد)
+
         if (UserFileHandler.getUserByCredentials(SUPER_ADMIN_EMAIL, SUPER_ADMIN_PASS) == null) {
             UserFileHandler.saveUser(SUPER_ADMIN_EMAIL, SUPER_ADMIN_PASS, "SUPER_ADMIN", "SA001", "Library Super Admin");
         }
 
-        // نؤجل تحميل اليوزرز لحد ما نحدد الملف في الـ test
+
         this.users = new ArrayList<>();
     }
 
-    // دالة جديدة نستدعيها في الـ test بعد ما نحدد الملف
+
     public void loadUsers() {
         this.users.clear();
         this.users.addAll(UserFileHandler.loadAllUsers());
@@ -85,7 +85,7 @@ public class AuthAdmin {
         loggedInRole = null;
     }
 
-    public void showAdminMenu(Scanner scanner) {
+   /* public void showAdminMenu(Scanner scanner) {
         if (!isLoggedInAdmin()) {
             System.out.println("❌ هذه القائمة مخصصة للمدراء فقط.");
             return;
@@ -228,7 +228,7 @@ public class AuthAdmin {
         new EmailNotifier(new RealEmailServer()).notify(targetUser, message);
         System.out.println("✅ Email sent.");
     }
-
+*/
     // ======= Book & CD Operations =======
 
     public void addBookInteractive(Scanner scanner) {
@@ -276,7 +276,7 @@ public class AuthAdmin {
 
     // ======= Borrow & Return =======
 
-    public void borrowBookInteractive(Scanner scanner) {
+/*    public void borrowBookInteractive(Scanner scanner) {
         System.out.println("\n=== استعارة كتاب ===");
         System.out.print("أدخل اسم الكتاب الذي تريد استعارته: "); String title = scanner.nextLine().trim();
         List<Book> matchingBooks = bookCDService.searchBooks(title);
@@ -347,9 +347,9 @@ public class AuthAdmin {
                 System.out.println("✅ تم دفع جميع الغرامات للادمين: " + user.getName());
             } else System.out.println("تم إلغاء الدفع.");
         } else System.out.println("الادمين ليس لديه غرامات مستحقة.");
-    }
+    }*/
 
-    // ======= Utility =======
+
 
     public User findUserById(String id) {
         return users.stream().filter(u -> u.getId().equals(id)).findFirst().orElse(null);
