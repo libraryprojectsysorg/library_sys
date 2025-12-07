@@ -2,6 +2,8 @@ package org.library.Service.Strategy;
 
 import org.library.Domain.*;
 import org.library.Service.Strategy.fines.FineCalculator;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Scanner;
 
@@ -22,15 +24,27 @@ public class AuthAdmin {
 
     public enum Role { SUPER_ADMIN, ADMIN, USER }
 
-    public AuthAdmin(BorrowService borrowService, ReminderService reminderService, FineCalculator fineCalculator, BookCDService bookCDService) {
-        if (UserFileHandler.getUserByCredentials(SUPER_ADMIN_EMAIL, SUPER_ADMIN_PASS) == null) {
-            UserFileHandler.saveUser(SUPER_ADMIN_EMAIL, SUPER_ADMIN_PASS, "SUPER_ADMIN", "SA001", "Library Super Admin");
-        }
-        this.users = UserFileHandler.loadAllUsers();
+    public AuthAdmin(BorrowService borrowService, ReminderService reminderService,
+                     FineCalculator fineCalculator, BookCDService bookCDService) {
+
         this.borrowService = borrowService;
         this.reminderService = reminderService;
         this.fineCalculator = fineCalculator;
         this.bookCDService = bookCDService;
+
+        // نضمن وجود السوبر أدمن أولاً (بيستخدم الملف الافتراضي أو اللي محدد)
+        if (UserFileHandler.getUserByCredentials(SUPER_ADMIN_EMAIL, SUPER_ADMIN_PASS) == null) {
+            UserFileHandler.saveUser(SUPER_ADMIN_EMAIL, SUPER_ADMIN_PASS, "SUPER_ADMIN", "SA001", "Library Super Admin");
+        }
+
+        // نؤجل تحميل اليوزرز لحد ما نحدد الملف في الـ test
+        this.users = new ArrayList<>();
+    }
+
+    // دالة جديدة نستدعيها في الـ test بعد ما نحدد الملف
+    public void loadUsers() {
+        this.users.clear();
+        this.users.addAll(UserFileHandler.loadAllUsers());
     }
 
     public boolean login(String email, String password) {
@@ -249,7 +263,7 @@ public class AuthAdmin {
 
     public void deleteCDInteractive(Scanner scanner) {
         System.out.print("CD code to delete: "); String code = scanner.nextLine().trim();
-        boolean removed = bookCDService.removeCDByIsbn(code);
+        boolean removed = bookCDService.removeCDByCode(code);
 
         System.out.println(removed ? "✅ CD deleted!" : "❌ Not found.");
     }

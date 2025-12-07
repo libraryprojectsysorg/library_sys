@@ -81,7 +81,7 @@ public class BookCDService {
                 .collect(Collectors.toList());
     }
 
-    public boolean removeCDByIsbn(String isbn) {
+    public boolean removeCDByCode(String isbn) {
         if (isbn == null || isbn.isEmpty()) return false;
         List<CD> allCDs = cds != null ? cds : CDFileHandler.loadAllCDs();
         boolean removed = allCDs.removeIf(c -> c.getIsbn().equals(isbn));

@@ -1,75 +1,83 @@
 package org.library;
 
 import org.junit.jupiter.api.*;
+import org.junit.jupiter.api.io.TempDir;
 import org.library.Domain.CD;
 import org.library.Service.Strategy.CDFileHandler;
 
-import java.io.File;
-import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 
 class CDFileHandlerTest {
 
-    private static final String TEST_FILE = "cds.txt"; // رح نستخدم نفس الملف الأصلي مع تنظيفه
+    @TempDir
+    Path tempDir;
+
+    private String testFilePath;
 
     @BeforeEach
-    void cleanup() throws Exception {
-        // نمسح محتوى الملف قبل كل اختبار لضمان استقلالية الاختبارات
-        Files.write(new File(TEST_FILE).toPath(), new byte[0]);
-    }
-
-    @AfterEach
-    void cleanupAfter() throws Exception {
-        // نمسح الملف بعد كل اختبار
-        Files.write(new File(TEST_FILE).toPath(), new byte[0]);
+    void setUp() {
+        testFilePath = tempDir.resolve("cds_test.txt").toString();
+        CDFileHandler.setCdsFile(testFilePath); // نستخدم ملف مؤقت
     }
 
     @Test
-    void testSaveCDSuccessfully() {
-        CD cd = new CD("Title1", "Author1", "ISBN1");
-        boolean saved = CDFileHandler.saveCD(cd);
-        assertTrue(saved);
+    void saveCD_ShouldAddNewCD() {
+        CD cd = new CD("Thriller", "Michael Jackson", "CD001");
 
-        List<CD> cds = CDFileHandler.loadAllCDs();
-        assertEquals(1, cds.size());
-        assertEquals("ISBN1", cds.get(0).getIsbn());
+        boolean result = CDFileHandler.saveCD(cd);
+
+        assertTrue(result);
+        List<CD> loaded = CDFileHandler.loadAllCDs();
+        assertEquals(1, loaded.size());
+        assertEquals("Thriller", loaded.get(0).getTitle());
     }
 
     @Test
-    void testSaveCDDuplicate() {
-        CD cd1 = new CD("Title1", "Author1", "ISBN1");
-        CD cd2 = new CD("Title2", "Author2", "ISBN1");
-        CDFileHandler.saveCD(cd1);
-        boolean saved = CDFileHandler.saveCD(cd2);
-        assertFalse(saved);
-
-        List<CD> cds = CDFileHandler.loadAllCDs();
-        assertEquals(1, cds.size());
-    }
-
-    @Test
-    void testRemoveCDByCode() {
-        CD cd = new CD("Title1", "Author1", "ISBN1");
+    void saveCD_Duplicate_ShouldReturnFalse() {
+        CD cd = new CD("Back in Black", "AC/DC", "CD002");
         CDFileHandler.saveCD(cd);
 
-        boolean removed = CDFileHandler.removeCDByCode("ISBN1");
-        assertTrue(removed);
+        boolean result = CDFileHandler.saveCD(cd); // نفس الكود
 
-        List<CD> cds = CDFileHandler.loadAllCDs();
-        assertEquals(0, cds.size());
+        assertFalse(result);
+        assertEquals(1, CDFileHandler.loadAllCDs().size());
     }
 
     @Test
-    void testRemoveNonExistingCD() {
-        boolean removed = CDFileHandler.removeCDByCode("NON_EXISTING");
+    void removeCDByCode_ShouldRemoveSuccessfully() {
+        CDFileHandler.saveCD(new CD("Test Album", "Artist", "DEL123"));
+
+        boolean removed = CDFileHandler.removeCDByCode("DEL123");
+
+        assertTrue(removed);
+        assertTrue(CDFileHandler.loadAllCDs().isEmpty());
+    }
+
+    @Test
+    void removeCDByCode_NonExisting_ShouldReturnFalse() {
+        boolean removed = CDFileHandler.removeCDByCode("NONEXISTENT");
         assertFalse(removed);
     }
 
     @Test
-    void testLoadAllCDsEmptyFile() {
+    void loadAllCDs_FromEmptyFile_ShouldReturnEmptyList() {
         List<CD> cds = CDFileHandler.loadAllCDs();
         assertTrue(cds.isEmpty());
+    }
+
+    @Test
+    void rewriteAllCDs_ShouldReplaceContent() {
+        CDFileHandler.saveCD(new CD("Old CD", "Old Artist", "OLD001"));
+        CDFileHandler.saveCD(new CD("Another", "Artist", "OLD002"));
+
+        List<CD> newList = List.of(new CD("New Album", "New Artist", "NEW001"));
+        CDFileHandler.rewriteAllCDs(newList);
+
+        List<CD> loaded = CDFileHandler.loadAllCDs();
+        assertEquals(1, loaded.size());
+        assertEquals("New Album", loaded.get(0).getTitle());
     }
 }
