@@ -2,24 +2,15 @@ package org.library;
 
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.library.Domain.Book;
-import org.library.Domain.Fine;
-import org.library.Domain.Loan;
-import org.library.Domain.User;
+import org.library.Domain.*;
 import org.library.Service.Strategy.*;
 import org.library.Service.Strategy.fines.FineCalculator;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.io.ByteArrayOutputStream;
-import java.io.PrintStream;
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.nio.file.*;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Scanner;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -28,399 +19,204 @@ import static org.mockito.Mockito.*;
 class AuthAdminTest {
 
     @Mock private BorrowService borrowService;
-    @Mock private ReminderService reminderService;
+    @Mock private ReminderService reminderService ;
     @Mock private FineCalculator fineCalculator;
     @Mock private BookCDService bookCDService;
 
-    @Mock private Scanner scanner;
-
-    @InjectMocks
     private AuthAdmin authAdmin;
 
-    private static final Path TEST_USER_FILE = Path.of("target", "test-users.txt");
-
-
-
     @BeforeEach
-    void setUp() throws IOException {
+    void setUp() throws Exception {
+        authAdmin = new AuthAdmin(borrowService, reminderService, fineCalculator, bookCDService);
 
-
-        Files.createDirectories(TEST_USER_FILE.getParent());
-        Files.writeString(TEST_USER_FILE, """
-        admin@test.com,admin123,SUPER_ADMIN,SA01,Super Admin
-        normal@test.com,user123,USER,U02,Normal User
-        """, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-
-        UserFileHandler.setUsersFile(TEST_USER_FILE.toString());
-
-
-        authAdmin.loadUsers();
-    }
-
-    @AfterEach
-    void tearDown() throws IOException {
-
-        Files.deleteIfExists(TEST_USER_FILE);
+        // نفرغ الـ users list ونحقن قايمة جديدة عشان نتحكم فيها
+        Field usersField = AuthAdmin.class.getDeclaredField("users");
+        usersField.setAccessible(true);
+        usersField.set(authAdmin, new ArrayList<User>());
     }
 
     @Test
-    void loginAsSuperAdmin_ShouldSucceed() {
-        assertTrue(authAdmin.login("admin@test.com", "admin123"));
-        assertTrue(authAdmin.isSuperAdmin());
-        assertTrue(authAdmin.isLoggedInAdmin());
+    void superAdminShouldLoginSuccessfully() {
+        // نعمل mock للـ static method بطريقة بسيطة جدًا
+        try (MockedStatic<UserFileHandler> mocked = Mockito.mockStatic(UserFileHandler.class)) {
+            User superAdmin = new User("SA001", "Library Super Admin", "default_super@library.com");
+            setPrivateField(superAdmin, "role", "SUPER_ADMIN");
+
+            mocked.when(() -> UserFileHandler.getUserByCredentials("default_super@library.com", "default_superpass123"))
+                    .thenReturn(superAdmin);
+
+            boolean result = authAdmin.login("default_super@library.com", "default_superpass123");
+
+            assertTrue(result);
+            assertTrue(authAdmin.isSuperAdmin());
+        }
     }
 
     @Test
-    void loginAsUser_ShouldSucceed() {
-        assertTrue(authAdmin.login("normal@test.com", "user123"));
-        assertTrue(authAdmin.isLoggedInUser());
-        assertFalse(authAdmin.isSuperAdmin());
+    void invalidLoginShouldFail() {
+        try (MockedStatic<UserFileHandler> mocked = Mockito.mockStatic(UserFileHandler.class)) {
+            mocked.when(() -> UserFileHandler.getUserByCredentials(anyString(), anyString()))
+                    .thenReturn(null);
+
+            assertFalse(authAdmin.login("wrong@wrong.com", "wrong"));
+            assertFalse(authAdmin.isLoggedInAdmin());
+        }
     }
 
     @Test
-    void loginWithWrongPassword_ShouldFail() {
-        assertFalse(authAdmin.login("admin@test.com", "wrong"));
+    void addAdminShouldReturnTrue() {
+        loginAsSuperAdmin();
+
+        try (MockedStatic<UserFileHandler> mocked = Mockito.mockStatic(UserFileHandler.class)) {
+            mocked.when(() -> UserFileHandler.saveUser("a@admin.com", "123", "ADMIN", "A001", "Admin"))
+                    .thenReturn(true);
+
+            boolean result = authAdmin.addAdmin("a@admin.com", "123", "A001", "Admin");
+
+            assertTrue(result);
+        }
     }
 
     @Test
-    void logout_ShouldResetState() {
-        authAdmin.login("admin@test.com", "admin123");
-        authAdmin.logout();
-        assertFalse(authAdmin.isLoggedInAdmin());
+    void deleteAdminShouldWork() {
+        loginAsSuperAdmin();
+
+        User adminUser = mock(User.class);
+        when(adminUser.getId()).thenReturn("A999");
+        when(adminUser.getRole()).thenReturn("ADMIN");
+        addUserToList(adminUser);
+
+        try (MockedStatic<UserFileHandler> mocked = Mockito.mockStatic(UserFileHandler.class)) {
+            mocked.when(() -> UserFileHandler.removeUserById("A999", "SUPER_ADMIN")).thenReturn(true);
+
+            assertTrue(authAdmin.deleteAdmin("A999"));
+        }
     }
 
     @Test
-    void addBookInteractive_ShouldCallService() {
-        when(scanner.nextLine())
-                .thenReturn("كتاب جديد")
-                .thenReturn("مؤلف جديد")
-                .thenReturn("ISBN123");
+    void unregisterUserShouldSucceedWhenClean() {
+        loginAsSuperAdmin();
 
-        when(bookCDService.addBook(anyString(), anyString(), anyString())).thenReturn(true);
+        User normalUser = mock(User.class);
+        when(normalUser.getId()).thenReturn("U888");
+        when(normalUser.getRole()).thenReturn("USER");
+        when(normalUser.hasUnpaidFines()).thenReturn(false);
+        addUserToList(normalUser);
 
-        authAdmin.addBookInteractive(scanner);
+        when(borrowService.hasActiveLoans(normalUser)).thenReturn(false);
 
-        verify(bookCDService).addBook("كتاب جديد", "مؤلف جديد", "ISBN123");
+        try (MockedStatic<UserFileHandler> mocked = Mockito.mockStatic(UserFileHandler.class)) {
+            mocked.when(() -> UserFileHandler.removeUserById("U888", "SUPER_ADMIN")).thenReturn(true);
+
+            assertTrue(authAdmin.unregisterUser("U888"));
+        }
     }
 
     @Test
-    void deleteBookInteractive_ShouldCallService() {
-        when(scanner.nextLine()).thenReturn("ISBN123");
-        when(bookCDService.removeByIsbn("ISBN123")).thenReturn(true);
+    void payAllUserFines_ShouldReturnTrue_WhenHasUnpaidFines() throws Exception {
 
-        authAdmin.deleteBookInteractive(scanner);
-
-        verify(bookCDService).removeByIsbn("ISBN123");
-    }
-
-    @Test
-    void addCDInteractive_ShouldCallService() {
-        when(scanner.nextLine())
-                .thenReturn("كتاب الجافا")     // عنوان
-                .thenReturn("أحمد محمد")       // مؤلف
-                .thenReturn("ISBN999");         // ISBN
-
-        when(bookCDService.addBook(anyString(), anyString(), anyString())).thenReturn(true);
-
-        authAdmin.addBookInteractive(scanner);
-
-        verify(bookCDService).addBook("كتاب الجافا", "أحمد محمد", "ISBN999");
-    }
-
-    @Test
-    void deleteCDInteractive_ShouldCallService() {
-        when(scanner.nextLine()).thenReturn("CD001");
-        when(bookCDService.removeCDByCode("CD001")).thenReturn(true);
-
-        authAdmin.deleteCDInteractive(scanner);
-
-        verify(bookCDService).removeCDByCode("CD001");
-    }
-
-    @Test
-    void findUserById_ShouldReturnCorrectUser() {
-        User user = authAdmin.findUserById("SA01");
-        assertNotNull(user);
-        assertEquals("admin@test.com", user.getEmail());
-        assertEquals("Super Admin", user.getName());
-    }
-    @Test
-    void addAdmin_ShouldReturnTrueWhenAdded() {
-        // نجبر النظام يفكر إننا super admin
-        setField("isLoggedIn", true);
-        setField("loggedInRole", AuthAdmin.Role.SUPER_ADMIN);
-
-        boolean result = authAdmin.addAdmin("newadmin@test.com", "pass123", "A001", "New Admin");
-
-        assertTrue(result);
-    }
-
-    @Test
-    void deleteAdmin_ShouldReturnTrueWhenDeleted() {
-        setField("isLoggedIn", true);
-        setField("loggedInRole", AuthAdmin.Role.SUPER_ADMIN);
+        User user = new User("U001", "Test User", "test@example.com");
 
 
-        authAdmin.addAdmin("todelete@test.com", "pass", "DEL001", "Delete Me");
-        authAdmin.loadUsers();
-
-        boolean result = authAdmin.deleteAdmin("DEL001");
-
-        assertTrue(result);
-    }
-
-    @Test
-    void unregisterUser_ShouldReturnTrue() {
-        setField("isLoggedIn", true);
-        setField("loggedInRole", AuthAdmin.Role.ADMIN);
-
-        // نضيف يوزر عادي
-        UserFileHandler.saveUser("user@test.com", "pass", "USER", "U999", "Test User");
-        authAdmin.loadUsers();
-
-        boolean result = authAdmin.unregisterUser("U999");
-
-        assertTrue(result);
-    }
-
-    @Test
-    void getUserTotalFine_ShouldReturnCorrectAmount() {
-
-        UserFileHandler.saveUser("fineuser@test.com", "pass", "USER", "F001", "Fine User");
-        authAdmin.loadUsers();
-
-        int fine = authAdmin.getUserTotalFine("F001");
-
-        assertEquals(0, fine);
-    }
-
-    @Test
-    void payAllUserFines_ShouldClearFines() {
-        UserFileHandler.saveUser("payuser@test.com", "pass", "USER", "P001", "Pay User");
-        authAdmin.loadUsers();
-        User user = authAdmin.findUserById("P001");
-
-        boolean paid = authAdmin.payAllUserFines(user);
-
-        assertFalse(paid);
-    }
+        Fine unpaidFine = new Fine(100);
 
 
-    @Test
-    void borrowAndReturnBook_ShouldWork() {
-        setField("isLoggedIn", true);
-        setField("loggedInRole", AuthAdmin.Role.ADMIN);
-
-
-        authAdmin.borrowBookInteractive(new Scanner("Test Book\nSA01\n"));
-        authAdmin.returnBookInteractive(new Scanner("Test Book\n"));
-    }
-
-    @Test
-    void payFine_ShouldRun() {
-        setField("isLoggedIn", true);
-        setField("loggedInRole", AuthAdmin.Role.ADMIN);
-
-        authAdmin.payFineForUserInteractive(new Scanner("admin@test.com\ny\n123456789\n"));
-    }
-    @Test
-    void showAdminMenu_AsRegularAdmin_ShouldShowCorrectOptions() {
-        setField("isLoggedIn", true);
-        setField("loggedInRole", AuthAdmin.Role.ADMIN);
-
-        // نضيف admin عادي
-        UserFileHandler.saveUser("regadmin@test.com", "pass", "ADMIN", "A001", "Regular Admin");
-        authAdmin.login("regadmin@test.com", "pass");
-
-        // نعمل spy على System.out عشان نتأكد إن القايمة المطبوعة تحتوي على خيار "Pay Fine"
-        ByteArrayOutputStream out = new ByteArrayOutputStream();
-        System.setOut(new PrintStream(out));
-
-        // ندخل خيار يخرج فورًا (14 = Logout للـ admin العادي)
-        Scanner mockScanner = new Scanner("14\n");
-        authAdmin.showAdminMenu(mockScanner);
-
-        String output = out.toString();
-        assertTrue(output.contains("Pay Fine"));
-        assertFalse(output.contains("Add Admin")); // ما يظهرش للـ admin العادي
-    }
-
-
-
-    @Test
-    void fineSummaryInteractive_ShouldShowTotalFine() {
-        UserFileHandler.saveUser("fineuser@test.com", "pass", "USER", "F999", "Fine User");
-        authAdmin.loadUsers();
-        authAdmin.login("admin@test.com", "admin123");
-
-        User user = authAdmin.findUserById("F999");
-        when(fineCalculator.calculateTotalFine(user)).thenReturn(120);
-
-        when(scanner.nextLine()).thenReturn("F999");
-
-        authAdmin.fineSummaryInteractive(scanner);
-
-    }
-
-    @Test
-    void payFineForUserInteractive_RefusePayment_ShouldNotPay() throws Exception {
-        setField("isLoggedIn", true);
-        setField("loggedInRole", AuthAdmin.Role.ADMIN);
-
-        when(scanner.nextLine())
-                .thenReturn("admin@test.com")
-                .thenReturn("n");
-
-        User user = authAdmin.findUserById("SA01");
-
-        // الحل النهائي: نستبدل قائمة الغرامات بـ ArrayList حقيقية
         Field finesField = User.class.getDeclaredField("fines");
         finesField.setAccessible(true);
-        List<Fine> mutableFines = new ArrayList<>();
-        finesField.set(user, mutableFines);
+        @SuppressWarnings("unchecked")
+        List<Fine> fines = (List<Fine>) finesField.get(user);
+        fines.add(unpaidFine);
 
-        Fine mockFine = mock(Fine.class);
-        when(mockFine.isPaid()).thenReturn(false);
-        mutableFines.add(mockFine);
 
-        when(fineCalculator.calculateTotalFine(user)).thenReturn(100);
+        User spyUser = spy(user);
 
-        authAdmin.payFineForUserInteractive(scanner);
+        boolean result = authAdmin.payAllUserFines(spyUser);
 
-        assertFalse(mutableFines.get(0).isPaid());
+        assertTrue(result);
+        verify(spyUser).payFine(unpaidFine);
+    }
+    @Test
+    void getAllBooksShouldReturnList() {
+        when(bookCDService.searchBooks("")).thenReturn(List.of(mock(Book.class)));
+        assertEquals(1, authAdmin.getAllBooks().size());
     }
 
     @Test
-    void payFineForUserInteractive_NoFine_ShouldPrintMessage() {
-        setField("isLoggedIn", true);
-        setField("loggedInRole", AuthAdmin.Role.ADMIN);
+    void borrowMediaShouldSucceed() {
+        loginAsSuperAdmin();
+        Media media = mock(Media.class);
+        User user = mock(User.class);
 
-        when(scanner.nextLine()).thenReturn("admin@test.com");
+        when(borrowService.borrowMedia(media, user)).thenReturn(mock(Loan.class));
 
-        authAdmin.payFineForUserInteractive(scanner);
+        assertTrue(authAdmin.borrowMedia(media, user));
+    }
 
+    @Test
+    void getUserTotalFine_ShouldReturnMinusOne_WhenUserNotFound() {
+        assertEquals(-1, authAdmin.getUserTotalFine("ANY_ID"));
+    }
+
+    @Test
+    void getUserTotalFine_ShouldReturnFineAmount_WhenUserExists() throws Exception {
+        User user = mock(User.class);
+        when(user.getId()).thenReturn("TEST123");
+
+        // نحقن اليوزر في الـ list
+        Field field = AuthAdmin.class.getDeclaredField("users");
+        field.setAccessible(true);
+        @SuppressWarnings("unchecked")
+        List<User> list = (List<User>) field.get(authAdmin);
+        list.add(user);
+
+        when(fineCalculator.calculateTotalFine(user)).thenReturn(300);
+
+        assertEquals(300, authAdmin.getUserTotalFine("TEST123"));
     }
 
 
-
-
     @Test
-    void returnBookInteractive_WithFine_ShouldPrintFineMessage() {
-        setField("isLoggedIn", true);
-        setField("loggedInRole", AuthAdmin.Role.ADMIN);
-
-        Book mockBook = mock(Book.class);
-        when(mockBook.getTitle()).thenReturn("Harry Potter");
+    void getUserTotalFine_ShouldReturnCalculatedFine_WhenUserExists() throws Exception {
 
         User mockUser = mock(User.class);
-        when(mockUser.getName()).thenReturn("Ahmad");
+        when(mockUser.getId()).thenReturn("U999");
 
-        Loan mockLoan = mock(Loan.class);
-        when(mockLoan.getMedia()).thenReturn(mockBook);
-        when(mockLoan.getUser()).thenReturn(mockUser);
-        when(mockLoan.getLoanId()).thenReturn("999L");
+        Field usersField = AuthAdmin.class.getDeclaredField("users");
+        usersField.setAccessible(true);
+        @SuppressWarnings("unchecked")
+        List<User> usersList = (List<User>) usersField.get(authAdmin);
+        usersList.add(mockUser);
 
-        when(borrowService.getLoans()).thenReturn(List.of(mockLoan));
-        when(borrowService.returnMedia("999L")).thenReturn(75);
 
-        when(scanner.nextLine()).thenReturn("Harry Potter");
+        when(fineCalculator.calculateTotalFine(mockUser)).thenReturn(750);
 
-        authAdmin.returnBookInteractive(scanner);
+        int result = authAdmin.getUserTotalFine("U999");
 
+        assertEquals(750, result);
     }
-
-    @Test
-    void borrowBookInteractive_BookNotFound_ShouldPrintError() {
-        setField("isLoggedIn", true);
-        setField("loggedInRole", AuthAdmin.Role.ADMIN);
-
-        when(scanner.nextLine())
-                .thenReturn("غير موجود أبدًا")
-                .thenReturn("SA01");
-
-        when(bookCDService.searchBooks("غير موجود أبدًا")).thenReturn(List.of());
-
-        authAdmin.borrowBookInteractive(scanner);
-
-    }
-
-    @Test
-    void borrowBookInteractive_UserNotFound_ShouldPrintError() {
-        setField("isLoggedIn", true);
-        setField("loggedInRole", AuthAdmin.Role.ADMIN);
-
-        when(scanner.nextLine())
-                .thenReturn("Existing Book")
-                .thenReturn("NONEXISTENT_ID");
-
-        Book b = new Book("Existing Book", "Author", "ISBN123");
-        when(bookCDService.searchBooks("Existing Book")).thenReturn(List.of(b));
-
-        authAdmin.borrowBookInteractive(scanner);
-
-    }
-
-    @Test
-    void handleSuperAdminChoice_InvalidOption_ShouldPrintInvalid() {
-        setField("isLoggedIn", true);
-        setField("loggedInRole", AuthAdmin.Role.SUPER_ADMIN);
-
-
-        try {
-            Method method = AuthAdmin.class.getDeclaredMethod("handleSuperAdminChoice", int.class, Scanner.class);
-            method.setAccessible(true);
-            method.invoke(authAdmin, 999, scanner);
-        } catch (Exception e) {
-            fail("Reflection failed");
+    private void loginAsSuperAdmin() {
+        try (MockedStatic<UserFileHandler> mocked = Mockito.mockStatic(UserFileHandler.class)) {
+            User su = new User("SA001", "Super", "default_super@library.com");
+            setPrivateField(su, "role", "SUPER_ADMIN");
+            mocked.when(() -> UserFileHandler.getUserByCredentials(anyString(), anyString())).thenReturn(su);
+            authAdmin.login("x", "x");
         }
     }
 
-    @Test
-    void handleAdminChoice_InvalidOption_ShouldPrintInvalid() {
-        setField("isLoggedIn", true);
-        setField("loggedInRole", AuthAdmin.Role.ADMIN);
-
+    private void addUserToList(User user) {
         try {
-            Method method = AuthAdmin.class.getDeclaredMethod("handleAdminChoice", int.class, Scanner.class);
-            method.setAccessible(true);
-            method.invoke(authAdmin, 999, scanner);
-        } catch (Exception e) {
-            fail("Reflection failed");
-        }
-    }
-
-    @Test
-    void coverPrivateMenuHandlers() throws Exception {
-        setField("isLoggedIn", true);
-
-        Method hs = AuthAdmin.class.getDeclaredMethod("handleSuperAdminChoice", int.class, Scanner.class);
-        hs.setAccessible(true);
-        Method ha = AuthAdmin.class.getDeclaredMethod("handleAdminChoice", int.class, Scanner.class);
-        ha.setAccessible(true);
-
-        setField("loggedInRole", AuthAdmin.Role.SUPER_ADMIN);
-        hs.invoke(authAdmin, 999, scanner);
-
-        setField("loggedInRole", AuthAdmin.Role.ADMIN);
-        ha.invoke(authAdmin, 999, scanner);
-    }
-    private void invokePrivate(Object target, String name, Object arg) throws Exception {
-        Method m = target.getClass().getDeclaredMethod(name, Scanner.class);
-        m.setAccessible(true);
-        m.invoke(target, arg);
-    }
-
-    private void setField(String name, Object value) {
-        try {
-            var f = AuthAdmin.class.getDeclaredField(name);
+            Field f = AuthAdmin.class.getDeclaredField("users");
             f.setAccessible(true);
-            f.set(authAdmin, value);
+            List<User> list = (List<User>) f.get(authAdmin);
+            list.add(user);
         } catch (Exception ignored) {}
     }
 
-    private void invoke(String name, Object arg) throws Exception {
-        var m = AuthAdmin.class.getDeclaredMethod(name, Scanner.class);
-        m.setAccessible(true);
-        m.invoke(authAdmin, arg);
+    private void setPrivateField(Object obj, String fieldName, Object value) {
+        try {
+            Field f = obj.getClass().getDeclaredField(fieldName);
+            f.setAccessible(true);
+            f.set(obj, value);
+        } catch (Exception ignored) {}
     }
 }

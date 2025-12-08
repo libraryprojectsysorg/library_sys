@@ -39,12 +39,13 @@ public class BookCDService {
     public List<Book> searchBooks(String query) {
         List<Book> allBooks = books != null ? books : BookFileHandler.loadAllBooks();
         if (query == null || query.isEmpty()) return allBooks;
+
         String lowerQuery = query.toLowerCase();
         return allBooks.stream()
                 .filter(b -> b.getTitle().toLowerCase().contains(lowerQuery) ||
                         b.getAuthor().toLowerCase().contains(lowerQuery) ||
                         b.getIsbn().toLowerCase().contains(lowerQuery))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public boolean removeByIsbn(String isbn) {
