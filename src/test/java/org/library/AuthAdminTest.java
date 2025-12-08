@@ -194,6 +194,44 @@ class AuthAdminTest {
 
         assertEquals(750, result);
     }
+
+
+    @Test
+    void getUserTotalFine_ShouldReturnCalculatedAmount() throws Exception {
+        User user = mock(User.class);
+        when(user.getId()).thenReturn("U999");
+
+
+        Field f = AuthAdmin.class.getDeclaredField("users");
+        f.setAccessible(true);
+        ((List<User>) f.get(authAdmin)).add(user);
+
+        when(fineCalculator.calculateTotalFine(user)).thenReturn(999);
+
+        assertEquals(999, authAdmin.getUserTotalFine("U999"));
+    }
+
+    @Test
+    void borrowMedia_ShouldReturnTrue_OnSuccess() {
+        Media media = mock(Media.class);
+        User user = mock(User.class);
+        Loan loan = mock(Loan.class);
+
+        when(borrowService.borrowMedia(media, user)).thenReturn(loan);
+
+        assertTrue(authAdmin.borrowMedia(media, user));
+    }
+
+    @Test
+    void borrowMedia_ShouldReturnFalse_OnException() {
+        Media media = mock(Media.class);
+        User user = mock(User.class);
+
+        when(borrowService.borrowMedia(media, user))
+                .thenThrow(new RuntimeException("Not available"));
+
+        assertFalse(authAdmin.borrowMedia(media, user));
+    }
     private void loginAsSuperAdmin() {
         try (MockedStatic<UserFileHandler> mocked = Mockito.mockStatic(UserFileHandler.class)) {
             User su = new User("SA001", "Super", "default_super@library.com");

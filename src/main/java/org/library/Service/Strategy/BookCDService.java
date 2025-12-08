@@ -1,13 +1,10 @@
 package org.library.Service.Strategy;
-
 import org.library.Domain.Book;
 import org.library.Domain.CD;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 public class BookCDService {
-
     private List<Book> books;
     private List<CD> cds;
 
@@ -67,7 +64,6 @@ public class BookCDService {
         CD newCD = new CD(title, author, isbn);
         if (cds != null) cds.add(newCD);
         else CDFileHandler.saveCD(newCD);
-
         return true;
     }
 

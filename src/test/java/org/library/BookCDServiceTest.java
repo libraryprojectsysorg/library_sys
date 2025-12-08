@@ -167,4 +167,16 @@ class BookCDServiceTest {
         assertEquals(1, books.size());
         assertEquals(1, cds.size());
     }
+    @Test
+    void addBook_ShouldUseInjectedList_WhenProvided() {
+        List<Book> injectedBooks = new ArrayList<>();
+        List<CD> injectedCds = new ArrayList<>();
+
+        BookCDService service = new BookCDService(injectedBooks, injectedCds);
+
+        service.addBook("Java Book", "Ahmad", "ISBN123");
+
+        assertEquals(1, injectedBooks.size());
+        assertEquals("Java Book", injectedBooks.get(0).getTitle());
+    }
 }

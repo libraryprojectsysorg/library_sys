@@ -80,4 +80,15 @@ class CDFileHandlerTest {
         assertEquals(1, loaded.size());
         assertEquals("New Album", loaded.get(0).getTitle());
     }
+    @Test
+    void saveCD_ShouldHandleIOException_Gracefully() {
+
+        CDFileHandler.setCdsFile("/invalid/path/that/does/not/exist/cdstest.txt");
+
+        CD cd = new CD("Test", "Artist", "CD123");
+
+        boolean result = CDFileHandler.saveCD(cd);
+
+        assertFalse(result);
+    }
 }

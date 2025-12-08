@@ -1,24 +1,18 @@
 package org.library.Service.Strategy;
-
 import org.library.Domain.CD;
-
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
-
 /**
  * @author Weam Ahmad
  * @author Seba Abd Aljwwad
  * @version 1.0
  */
 public class CDFileHandler {
-
     private static String cdsFile = "cds.txt";
-
     public static void setCdsFile(String filePath) {
         cdsFile = filePath;
     }
-
     /**
      * Save a CD to file.
      * @param cd CD object
@@ -53,9 +47,7 @@ public class CDFileHandler {
     public static boolean removeCDByCode(String code) {
         List<CD> cds = loadAllCDs();
         boolean removed = cds.removeIf(cd -> cd.getIsbn().equals(code));
-
         if (!removed) return false;
-
         try (FileWriter writer = new FileWriter(cdsFile, false);
              PrintWriter printWriter = new PrintWriter(writer)) {
             for (CD cd : cds) {
@@ -77,8 +69,7 @@ public class CDFileHandler {
         List<CD> cds = new ArrayList<>();
         File file = new File(cdsFile);
         if (!file.exists()) return cds;
-
-        try (BufferedReader reader = new BufferedReader(new FileReader(cdsFile))) {
+       try (BufferedReader reader = new BufferedReader(new FileReader(cdsFile))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 String[] parts = line.split(",", 3);
