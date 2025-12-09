@@ -75,7 +75,7 @@ public class BookCDService {
                 .filter(c -> c.getTitle().toLowerCase().contains(lowerQuery) ||
                         c.getAuthor().toLowerCase().contains(lowerQuery) ||
                         c.getIsbn().toLowerCase().contains(lowerQuery))
-                .collect(Collectors.toList());
+                .toList();
     }
 
     public boolean removeCDByCode(String isbn) {

@@ -37,7 +37,7 @@ class AuthAdminTest {
 
     @Test
     void superAdminShouldLoginSuccessfully() {
-        // نعمل mock للـ static method بطريقة بسيطة جدًا
+
         try (MockedStatic<UserFileHandler> mocked = Mockito.mockStatic(UserFileHandler.class)) {
             User superAdmin = new User("SA001", "Library Super Admin", "default_super@library.com");
             setPrivateField(superAdmin, "role", "SUPER_ADMIN");

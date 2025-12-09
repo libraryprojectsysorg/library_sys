@@ -17,7 +17,9 @@ public class BookFileHandler {
     private static final Logger LOGGER = Logger.getLogger(BookFileHandler.class.getName());
     private static String booksFile = "books.txt";
 
-
+    private BookFileHandler() {
+        throw new UnsupportedOperationException("Utility class – cannot be instantiated");
+    }
     public static void setBooksFile(String filePath) {
         booksFile = filePath;
     }
@@ -28,7 +30,7 @@ public class BookFileHandler {
             String bookData = book.getTitle() + "," + book.getAuthor() + "," + book.getIsbn();
             printWriter.println(bookData);
         } catch (IOException e) {
-            LOGGER.log(Level.SEVERE, "❌ خطأ أثناء حفظ الكتاب: " + e.getMessage(), e);
+            LOGGER.log(Level.SEVERE, "خطأ أثناء حفظ الكتاب", e);
         }
     }
 
@@ -44,7 +46,7 @@ public class BookFileHandler {
             }
         } catch (FileNotFoundException e) { }
         catch (IOException e) {
-            LOGGER.log(Level.SEVERE, "❌ خطأ أثناء قراءة ملف الكتب: " + e.getMessage(), e);
+            LOGGER.log(Level.SEVERE, "خطأ أثناء قراءة ملف الكتب", e);
         }
         return books;
     }
@@ -57,7 +59,7 @@ public class BookFileHandler {
                 printWriter.println(bookData);
             }
         } catch (IOException e) {
-            LOGGER.log(Level.SEVERE, "❌ خطأ أثناء إعادة كتابة ملف الكتب: " + e.getMessage(), e);
+            LOGGER.log(Level.SEVERE, "خطأ أثناء إعادة كتابة ملف الكتب", e);
         }
     }
 }
