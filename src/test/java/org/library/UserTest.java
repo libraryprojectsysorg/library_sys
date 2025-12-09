@@ -38,12 +38,12 @@ class UserTest {
     void testAddFine() {
         // Arrange
         Fine mockFine = mock(Fine.class);
-        when(mockFine.isPaid()).thenReturn(false); // الغرامة غير مدفوعة
+        when(mockFine.isPaid()).thenReturn(false);
 
-        // Act
+
         user.addFine(mockFine);
 
-        // Assert
+
         assertEquals(1, user.getFines().size());
         assertTrue(user.hasUnpaidFines(), "User should be flagged as having unpaid fines");
     }
@@ -57,61 +57,45 @@ class UserTest {
     @Test
     @DisplayName("Test payFine marks fine as paid and updates status")
     void testPayFine() {
-        // Arrange
+
         Fine fine1 = mock(Fine.class);
         when(fine1.isPaid()).thenReturn(false);
 
         user.addFine(fine1);
-        assertTrue(user.hasUnpaidFines()); // تأكيد مبدئي
-
-        // محاكاة أن الغرامة أصبحت مدفوعة عند استدعاء setPaid
-        // ملاحظة: في الكود الأصلي setPaid تغير حالة الاوبجكت، هنا نحتاج ضبط الـ Mock ليتصرف بذكاء
-        // لكن بما أن اللوجيك يعتمد على user.payFine الذي يستدعي updateHasUnpaidFines
-        // سنحتاج لضبط سلوك isPaid ليعود بـ true بعد الدفع إذا كنا نستخدم Spy،
-        // أو ببساطة نختبر استدعاء الدالة setPaid.
-
-        // Act
+        assertTrue(user.hasUnpaidFines());
         boolean result = user.payFine(fine1);
 
-        // Assert
-        assertTrue(result, "payFine should return true if fine exists");
-        verify(fine1).setPaid(true); // تأكدنا أن دالة الدفع تم استدعاؤها داخل الكلاس
 
-        // لكي نختبر أن hasUnpaidFines أصبحت false، يجب أن نغير سلوك الـ Mock
+        assertTrue(result, "payFine should return true if fine exists");
+        verify(fine1).setPaid(true);
         when(fine1.isPaid()).thenReturn(true);
-        // نستدعي updateHasUnpaidFines بطريقة غير مباشرة (مثلاً عبر setFines أو دفع آخر)
-        // أو نعتمد على أن payFine تستدعي updateHasUnpaidFines
-        // هنا سنقوم بعمل حيلة صغيرة لمحاكاة تغيير الحالة:
-        user.payFine(fine1); // استدعاء مرة أخرى بعد أن أصبح الـ Mock يرجع true
+
+        user.payFine(fine1);
         assertFalse(user.hasUnpaidFines(), "Status should update to false after paying");
     }
 
     @Test
     @DisplayName("Test payAllFines pays everything")
     void testPayAllFines() {
-        // Arrange
+
         Fine f1 = mock(Fine.class);
         Fine f2 = mock(Fine.class);
 
         user.addFine(f1);
         user.addFine(f2);
 
-        // Act
+
         user.payAllFines();
 
-        // Assert
+
         verify(f1).setPaid(true);
         verify(f2).setPaid(true);
 
-        // لمحاكاة أن الحالة تحدحدث، نجعل الـ Mocks ترجع true الآن
+
         when(f1.isPaid()).thenReturn(true);
         when(f2.isPaid()).thenReturn(true);
 
-        // تحديث الحالة يدوياً عبر حركة التفافية لأننا لا نستطيع استدعاء private method
-        // لكن payAllFines تستدعي التحديث في نهايتها، وبما أننا Mocked Objects
-        // الـ stream داخل الكلاس سيفحص isPaid() التي أصبحت ترجع true الآن (بسبب السطرين أعلاه لا)
-        // *تصحيح*: الـ when(...) يجب أن تكون قبل الاستدعاء إذا كنا نريد للـ stream أن يراها
-        // ولكن بما أن setPaid void، فالأفضل اختبار أن الاستدعاء تم (verify).
+
     }
 
     @Test
@@ -134,26 +118,23 @@ class UserTest {
         user.addFine(unpaidFine2);
         user.addFine(paidFine);
 
-        // Act
         int total = user.getTotalUnpaidFine();
 
-        // Assert
         assertEquals(80, total, "Should sum only unpaid fines (50 + 30)");
     }
 
     @Test
     @DisplayName("Test setFines replaces list and updates status")
     void testSetFines() {
-        // Arrange
+
         List<Fine> newFines = new ArrayList<>();
         Fine f1 = mock(Fine.class);
-        when(f1.isPaid()).thenReturn(false); // غرامة غير مدفوعة
+        when(f1.isPaid()).thenReturn(false);
         newFines.add(f1);
 
-        // Act
+
         user.setFines(newFines);
 
-        // Assert
         assertEquals(1, user.getFines().size());
         assertTrue(user.hasUnpaidFines(), "Should flag unpaid fines from the new list");
     }
@@ -162,8 +143,8 @@ class UserTest {
     @DisplayName("Test Equals and HashCode")
     void testEqualsAndHashCode() {
         User user1 = new User("1", "A", "a@a.com");
-        User user2 = new User("1", "B", "b@b.com"); // نفس الـ ID
-        User user3 = new User("2", "A", "a@a.com"); // ID مختلف
+        User user2 = new User("1", "B", "b@b.com");
+        User user3 = new User("2", "A", "a@a.com");
 
         assertEquals(user1, user2, "Users with same ID should be equal");
         assertNotEquals(user1, user3, "Users with different ID should not be equal");
@@ -175,7 +156,7 @@ class UserTest {
     void testGetFinesIsImmutable() {
         List<Fine> fines = user.getFines();
         Fine fine = mock(Fine.class);
-        // محاولة التعديل على القائمة المرجعة يجب أن تفشل
+
         assertThrows(UnsupportedOperationException.class, () -> fines.add(fine));
     }
 }

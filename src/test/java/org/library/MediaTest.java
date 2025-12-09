@@ -11,10 +11,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 class MediaTest {
 
-    /**
-     * هذا كلاس داخلي (Concrete Class) نستخدمه فقط لغايات الاختبار
-     * لأن Media هو abstract ولا يمكن عمل new Media() مباشرة.
-     */
+
     private static class MediaImpl extends Media {
         public MediaImpl(String title, String author, String isbn) {
             super(title, author, isbn);
@@ -22,32 +19,30 @@ class MediaTest {
 
         @Override
         public int getLoanDays() {
-            return 7; // قيمة تجريبية
+            return 7;
         }
 
         @Override
         public FineStrategy getFineStrategy() {
-            return null; // لا يهمنا هنا
+            return null;
         }
 
         @Override
         public int getDailyFineRate(String userRole) {
-            return 10; // قيمة تجريبية
+            return 10;
         }
     }
 
     @Test
     @DisplayName("Test creating valid Media object")
     void testConstructor_ValidInputs() {
-        // Arrange
+
         String title = "Clean Code";
         String author = "Robert C. Martin";
         String isbn = "978-0132350884";
 
-        // Act
         Media media = new MediaImpl(title, author, isbn);
 
-        // Assert
         assertEquals(title, media.getTitle());
         assertEquals(author, media.getAuthor());
         assertEquals(isbn, media.getIsbn());
@@ -57,15 +52,15 @@ class MediaTest {
     @ParameterizedTest
     @DisplayName("Test constructor throws exception for invalid inputs")
     @CsvSource({
-            ", Author, ISBN",       // Title is null
-            "'', Author, ISBN",     // Title is empty
-            "Title, , ISBN",        // Author is null
-            "Title, '', ISBN",      // Author is empty
-            "Title, Author, ",      // ISBN is null
-            "Title, Author, ''"     // ISBN is empty
+            ", Author, ISBN",
+            "'', Author, ISBN",
+            "Title, , ISBN",
+            "Title, '', ISBN",
+            "Title, Author, ",
+            "Title, Author, ''"
     })
     void testConstructor_InvalidInputs(String title, String author, String isbn) {
-        // Act & Assert
+
         Exception exception = assertThrows(IllegalArgumentException.class, () -> {
             new MediaImpl(title, author, isbn);
         });
@@ -76,19 +71,19 @@ class MediaTest {
     @Test
     @DisplayName("Test availability setter and getter")
     void testAvailability() {
-        // Arrange
+
         Media media = new MediaImpl("Title", "Author", "12345");
 
-        // Act
+
         media.setAvailable(false);
 
-        // Assert
+
         assertFalse(media.isAvailable(), "Media should be unavailable after setting it to false");
 
-        // Act again
+
         media.setAvailable(true);
 
-        // Assert again
+
         assertTrue(media.isAvailable(), "Media should be available after setting it to true");
     }
 }

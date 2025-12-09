@@ -17,7 +17,7 @@ class CDTest {
         assertEquals("Thriller", cd.getTitle());
         assertEquals("Michael Jackson", cd.getAuthor());
         assertEquals("CD001", cd.getIsbn());
-        assertTrue(cd.isAvailable()); // من Media
+        assertTrue(cd.isAvailable());
     }
 
     @Test

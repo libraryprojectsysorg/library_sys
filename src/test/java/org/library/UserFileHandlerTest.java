@@ -4,11 +4,15 @@ import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.io.TempDir;
 import org.library.Domain.User;
 import org.library.Service.Strategy.UserFileHandler;
+import org.mockito.MockedStatic;
 
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.mockStatic;
 
 class UserFileHandlerTest {
 
@@ -182,5 +186,23 @@ class UserFileHandlerTest {
         boolean updated = UserFileHandler.updateUser(user);
 
         assertFalse(updated);
+    }
+    @Test
+    void shouldHandleIOException_WhenFileIsLocked_UsingMockStatic() {
+
+        try (MockedStatic<UserFileHandler> mocked = mockStatic(UserFileHandler.class)) {
+
+
+            mocked.when(UserFileHandler::loadAllUsers).thenReturn(new ArrayList<>());
+            mocked.when(() -> UserFileHandler.getUserByCredentials(anyString(), anyString())).thenReturn(null);
+            mocked.when(() -> UserFileHandler.saveUser(anyString(), anyString(), anyString(), anyString(), anyString())).thenReturn(false);
+            mocked.when(() -> UserFileHandler.removeUserById(anyString(), anyString())).thenReturn(false);
+
+
+            assertTrue(UserFileHandler.loadAllUsers().isEmpty());
+
+
+            mocked.verify(() -> UserFileHandler.loadAllUsers());
+        }
     }
 }

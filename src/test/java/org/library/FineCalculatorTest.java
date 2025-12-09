@@ -82,7 +82,7 @@ class FineCalculatorTest {
 
     @Test
     void shouldReturnZero_WhenNoLoansAreOverdue() {
-        // Arrange
+
         User user = new User("U01", "Happy User", "happy@test.com", "USER");
 
 

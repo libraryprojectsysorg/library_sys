@@ -35,26 +35,25 @@ class LoanTest {
 
     @Test
     void shouldSetReturnedToTrue() {
-        // Arrange
+
         Loan loan = new Loan("L001", mock(Media.class), mock(User.class), LocalDate.now(), LocalDate.now().plusDays(14));
 
-        // Act
+
         loan.setReturned(true);
 
-        // Assert
+
         assertTrue(loan.isReturned(), "Loan should be marked as returned");
     }
 
     @Test
     void shouldSetReturnedToFalse() {
-        // Arrange
+
         Loan loan = new Loan("L001", mock(Media.class), mock(User.class), LocalDate.now(), LocalDate.now().plusDays(14));
         loan.setReturned(true);  // نبدأ بـ true
 
-        // Act
         loan.setReturned(false);
 
-        // Assert
+
         assertFalse(loan.isReturned(), "Loan should be unmarked as returned");
     }
 }

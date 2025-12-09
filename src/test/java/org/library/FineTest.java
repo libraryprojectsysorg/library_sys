@@ -46,7 +46,7 @@ class FineTest {
 
         assertEquals(fine1, fine2);
         assertEquals(fine2, fine1);
-        assertEquals(fine1, fine1); // reflexivity
+        assertEquals(fine1, fine1);
     }
 
     @Test
@@ -88,7 +88,7 @@ class FineTest {
     void shouldBeImmutableExceptForPaidStatus() {
         Fine fine = new Fine(123);
 
-        // amount is final → can't be changed
+
         assertEquals(fine.getAmount(), 123);
 
         fine.setPaid(true);
