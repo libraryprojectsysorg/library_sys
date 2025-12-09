@@ -1,4 +1,4 @@
-package org.library.Service.Strategy;
+package org.library.Service.strategy;
 
 import io.github.cdimascio.dotenv.Dotenv;
 import jakarta.mail.*;

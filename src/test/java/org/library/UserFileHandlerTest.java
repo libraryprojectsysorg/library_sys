@@ -3,7 +3,7 @@ package org.library;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.io.TempDir;
 import org.library.domain.User;
-import org.library.Service.Strategy.UserFileHandler;
+import org.library.Service.strategy.UserFileHandler;
 import org.mockito.MockedStatic;
 
 import java.nio.file.Path;

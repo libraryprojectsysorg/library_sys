@@ -1,4 +1,4 @@
-package org.library.Service.Strategy;
+package org.library.Service.strategy;
 import org.library.domain.Book;
 import org.library.domain.CD;
 import java.util.List;

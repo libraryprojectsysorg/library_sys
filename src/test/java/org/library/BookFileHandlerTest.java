@@ -4,7 +4,7 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.library.domain.Book;
-import org.library.Service.Strategy.BookFileHandler;
+import org.library.Service.strategy.BookFileHandler;
 
 import java.io.File;
 

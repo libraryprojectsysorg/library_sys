@@ -3,8 +3,8 @@ package org.library;
 import org.junit.jupiter.api.Test;
 import org.library.domain.CD;
 import org.library.domain.Media;
-import org.library.Service.Strategy.fines.CDFineStrategy;
-import org.library.Service.Strategy.fines.FineStrategy;
+import org.library.Service.strategy.fines.CDFineStrategy;
+import org.library.Service.strategy.fines.FineStrategy;
 
 import static org.junit.jupiter.api.Assertions.*;
 

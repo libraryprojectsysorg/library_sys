@@ -7,9 +7,9 @@ import org.library.domain.Book;
 import org.library.domain.Loan;
 import org.library.domain.User;
 
-import org.library.Service.Strategy.BookFileHandler;
-import org.library.Service.Strategy.LoanFileHandler;
-import org.library.Service.Strategy.UserFileHandler;
+import org.library.Service.strategy.BookFileHandler;
+import org.library.Service.strategy.LoanFileHandler;
+import org.library.Service.strategy.UserFileHandler;
 
 
 import java.io.File;

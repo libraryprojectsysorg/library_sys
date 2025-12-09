@@ -5,9 +5,9 @@ import org.junit.jupiter.api.io.TempDir;
 import org.library.domain.Book;
 
 import org.library.domain.CD;
-import org.library.Service.Strategy.BookCDService;
-import org.library.Service.Strategy.BookFileHandler;
-import org.library.Service.Strategy.CDFileHandler;
+import org.library.Service.strategy.BookCDService;
+import org.library.Service.strategy.BookFileHandler;
+import org.library.Service.strategy.CDFileHandler;
 import org.mockito.MockedStatic;
 
 import java.nio.file.Path;

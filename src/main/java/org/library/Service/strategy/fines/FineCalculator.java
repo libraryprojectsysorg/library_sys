@@ -1,13 +1,13 @@
 
 
-package org.library.Service.Strategy.fines;
+package org.library.Service.strategy.fines;
 
 
 import org.library.domain.Book;
 import org.library.domain.CD;
 import org.library.domain.Loan;
 import org.library.domain.User;
-import org.library.Service.Strategy.BorrowService;
+import org.library.Service.strategy.BorrowService;
 
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;

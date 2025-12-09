@@ -4,16 +4,17 @@
 
  */
 
-package org.library.Service.Strategy;
+package org.library.Service.strategy;
 
 import org.library.domain.Book;
 
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
-
+import java.util.logging.Level;
+import java.util.logging.Logger;
 public class BookFileHandler {
-
+    private static final Logger LOGGER = Logger.getLogger(BookFileHandler.class.getName());
     private static String booksFile = "books.txt";
 
 
@@ -27,7 +28,7 @@ public class BookFileHandler {
             String bookData = book.getTitle() + "," + book.getAuthor() + "," + book.getIsbn();
             printWriter.println(bookData);
         } catch (IOException e) {
-            System.err.println("❌ خطأ أثناء حفظ الكتاب: " + e.getMessage());
+            LOGGER.log(Level.SEVERE, "❌ خطأ أثناء حفظ الكتاب: " + e.getMessage(), e);
         }
     }
 
@@ -43,7 +44,7 @@ public class BookFileHandler {
             }
         } catch (FileNotFoundException e) { }
         catch (IOException e) {
-            System.err.println("❌ خطأ أثناء قراءة ملف الكتب: " + e.getMessage());
+            LOGGER.log(Level.SEVERE, "❌ خطأ أثناء قراءة ملف الكتب: " + e.getMessage(), e);
         }
         return books;
     }
@@ -56,7 +57,7 @@ public class BookFileHandler {
                 printWriter.println(bookData);
             }
         } catch (IOException e) {
-            System.err.println("❌ خطأ أثناء إعادة كتابة ملف الكتب: " + e.getMessage());
+            LOGGER.log(Level.SEVERE, "❌ خطأ أثناء إعادة كتابة ملف الكتب: " + e.getMessage(), e);
         }
     }
 }

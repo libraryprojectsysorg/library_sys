@@ -1,7 +1,7 @@
 package org.library.domain;
 
-import org.library.Service.Strategy.fines.CDFineStrategy;
-import org.library.Service.Strategy.fines.FineStrategy;
+import org.library.Service.strategy.fines.CDFineStrategy;
+import org.library.Service.strategy.fines.FineStrategy;
 
 /**
 

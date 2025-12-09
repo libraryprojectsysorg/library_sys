@@ -2,9 +2,9 @@ package org.library;
 
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.library.Service.Strategy.*;
+import org.library.Service.strategy.*;
 import org.library.domain.*;
-import org.library.Service.Strategy.fines.FineCalculator;
+import org.library.Service.strategy.fines.FineCalculator;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 

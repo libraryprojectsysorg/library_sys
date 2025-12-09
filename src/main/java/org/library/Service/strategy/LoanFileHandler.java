@@ -4,7 +4,7 @@
 
  */
 
-package org.library.Service.Strategy;
+package org.library.Service.strategy;
 
 import org.library.domain.*;
 

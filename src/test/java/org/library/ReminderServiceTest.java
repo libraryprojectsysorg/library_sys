@@ -4,9 +4,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.library.domain.User;
-import org.library.Service.Strategy.BorrowService;
-import org.library.Service.Strategy.Observer;
-import org.library.Service.Strategy.ReminderService;
+import org.library.Service.strategy.BorrowService;
+import org.library.Service.strategy.Observer;
+import org.library.Service.strategy.ReminderService;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 

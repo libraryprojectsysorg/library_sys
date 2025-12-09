@@ -1,7 +1,7 @@
 package org.library.domain;
 
-import org.library.Service.Strategy.fines.BookFineStrategy;
-import org.library.Service.Strategy.fines.FineStrategy;
+import org.library.Service.strategy.fines.BookFineStrategy;
+import org.library.Service.strategy.fines.FineStrategy;
 
 /**
  * Entity for book (Sprint 1 & 5: extends Media for polymorphism).

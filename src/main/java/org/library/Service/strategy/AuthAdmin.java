@@ -1,19 +1,30 @@
-package org.library.Service.Strategy;
+package org.library.Service.strategy;
 
 import org.library.domain.*;
-import org.library.Service.Strategy.fines.FineCalculator;
+import org.library.Service.strategy.fines.FineCalculator;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class AuthAdmin {
 
+
+    private static final String ROLE_SUPER_ADMIN = "SUPER_ADMIN";
+    private static final String ROLE_ADMIN = "ADMIN";
+    private static final String ROLE_USER = "USER";
+
+    private static final String SUPER_ADMIN_EMAIL =
+            System.getenv("ADMIN_EMAIL") != null ? System.getenv("ADMIN_EMAIL") : "default_super@library.com";
+
+    private static final String SUPER_ADMIN_PASS =
+            System.getenv("ADMIN_PASS") != null ? System.getenv("ADMIN_PASS") : "default_superpass123";
+
+
     @SuppressWarnings("unused")
     private String loggedInEmail;
 
     private final List<User> users;
     private boolean isLoggedIn = false;
-
 
     private Role loggedInRole = null;
 
@@ -23,9 +34,6 @@ public class AuthAdmin {
     private ReminderService reminderService;
 
     private final FineCalculator fineCalculator;
-
-    private static final String SUPER_ADMIN_EMAIL = System.getenv("ADMIN_EMAIL") != null ? System.getenv("ADMIN_EMAIL") : "default_super@library.com";
-    private static final String SUPER_ADMIN_PASS = System.getenv("ADMIN_PASS") != null ? System.getenv("ADMIN_PASS") : "default_superpass123";
 
     public enum Role {SUPER_ADMIN, ADMIN, USER}
 
@@ -37,8 +45,15 @@ public class AuthAdmin {
         this.fineCalculator = fineCalculator;
         this.bookCDService = bookCDService;
 
+        // Ensure SUPER ADMIN exists
         if (UserFileHandler.getUserByCredentials(SUPER_ADMIN_EMAIL, SUPER_ADMIN_PASS) == null) {
-            UserFileHandler.saveUser(SUPER_ADMIN_EMAIL, SUPER_ADMIN_PASS, "SUPER_ADMIN", "SA001", "Library Super Admin");
+            UserFileHandler.saveUser(
+                    SUPER_ADMIN_EMAIL,
+                    SUPER_ADMIN_PASS,
+                    ROLE_SUPER_ADMIN,
+                    "SA001",
+                    "Library Super Admin"
+            );
         }
 
         this.users = new ArrayList<>();
@@ -54,12 +69,15 @@ public class AuthAdmin {
         if (user != null) {
             isLoggedIn = true;
             loggedInEmail = email;
-            loggedInRole = switch (user.getRole().toUpperCase()) {
-                case "SUPER_ADMIN" -> Role.SUPER_ADMIN;
-                case "ADMIN" -> Role.ADMIN;
-                case "USER" -> Role.USER;
+
+            String role = user.getRole().toUpperCase();
+            loggedInRole = switch (role) {
+                case ROLE_SUPER_ADMIN -> Role.SUPER_ADMIN;
+                case ROLE_ADMIN -> Role.ADMIN;
+                case ROLE_USER -> Role.USER;
                 default -> null;
             };
+
             return true;
         }
         return false;
@@ -83,15 +101,16 @@ public class AuthAdmin {
         loggedInRole = null;
     }
 
-// ======= User/Admin Operations =======
+
 
     public boolean addAdmin(String email, String password, String id, String name) {
-        return UserFileHandler.saveUser(email, password, "ADMIN", id, name);
+        return UserFileHandler.saveUser(email, password, ROLE_ADMIN, id, name);
     }
 
     public boolean deleteAdmin(String id) {
         User user = findUserById(id);
-        if (user == null || !user.getRole().equalsIgnoreCase("ADMIN")) return false;
+        if (user == null || !user.getRole().equalsIgnoreCase(ROLE_ADMIN)) return false;
+
         boolean removed = UserFileHandler.removeUserById(id, loggedInRole.name());
         if (removed) users.remove(user);
         return removed;
@@ -99,11 +118,18 @@ public class AuthAdmin {
 
     public boolean unregisterUser(String userId) {
         User user = findUserById(userId);
-        if (user == null || user.getRole().equalsIgnoreCase("SUPER_ADMIN") || user.getRole().equalsIgnoreCase("ADMIN")) return false;
+
+        if (user == null
+                || user.getRole().equalsIgnoreCase(ROLE_SUPER_ADMIN)
+                || user.getRole().equalsIgnoreCase(ROLE_ADMIN))
+            return false;
+
         if (borrowService.hasActiveLoans(user) || user.hasUnpaidFines()) return false;
+
         borrowService.unregisterUser(userId);
         boolean removed = UserFileHandler.removeUserById(userId, loggedInRole.name());
         if (removed) users.remove(user);
+
         return removed;
     }
 
@@ -120,14 +146,14 @@ public class AuthAdmin {
 
     public boolean payAllUserFines(User user) {
         if (user == null || user.getFines().isEmpty()) return false;
+
         for (Fine f : user.getFines()) {
             if (!f.isPaid()) user.payFine(f);
         }
+
         FineFileManager.removePaidFines(user);
         return true;
     }
-
-
 
     public boolean addBook(String title, String author, String isbn) {
         return bookCDService.addBook(title, author, isbn);
@@ -153,7 +179,7 @@ public class AuthAdmin {
         return bookCDService.searchCD("");
     }
 
-// ======= Borrow & Return =======
+
 
     public boolean borrowMedia(Media media, User user) {
         try {
@@ -171,6 +197,5 @@ public class AuthAdmin {
     public String getErrorMessage() {
         return !isLoggedIn ? "Invalid credentials - please try again." : "Login successful";
     }
-
 
 }
