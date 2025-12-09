@@ -21,12 +21,7 @@
         <sonar.projectKey>libraryprojectsysorg_library_sys</sonar.projectKey>
         <sonar.organization>libraryprojectsysorg</sonar.organization>
         <sonar.host.url>https://sonarcloud.io</sonar.host.url>
-        <properties>
-            <sonar.exclusions>
-                src/main/java/org/library/Main.java,
-                src/main/java/org/library/ui/AdminUI.java
-            </sonar.exclusions>
-        </properties>
+
     </properties>
 
     <dependencies>
