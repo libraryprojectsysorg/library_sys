@@ -18,7 +18,7 @@ class UserTest {
 
     @BeforeEach
     void setUp() {
-        // تهيئة مستخدم جديد قبل كل اختبار لضمان بيئة نظيفة
+
         user = new User("U101", "Ahmad", "ahmad@example.com", "Student");
     }
 

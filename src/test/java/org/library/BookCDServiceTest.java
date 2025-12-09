@@ -8,12 +8,16 @@ import org.library.Domain.CD;
 import org.library.Service.Strategy.BookCDService;
 import org.library.Service.Strategy.BookFileHandler;
 import org.library.Service.Strategy.CDFileHandler;
+import org.mockito.MockedStatic;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.*;
+import static org.mockito.Mockito.doNothing;
+import static org.mockito.Mockito.mockStatic;
 
 class BookCDServiceTest {
 
@@ -178,5 +182,33 @@ class BookCDServiceTest {
 
         assertEquals(1, injectedBooks.size());
         assertEquals("Java Book", injectedBooks.get(0).getTitle());
+    }
+    @Test
+    void shouldUseFileHandlers_WhenListsAreNull() {
+        BookCDService service = new BookCDService(); // books = null, cds = null
+
+        try (MockedStatic<BookFileHandler> bookMock = mockStatic(BookFileHandler.class);
+             MockedStatic<CDFileHandler> cdMock = mockStatic(CDFileHandler.class)) {
+            bookMock.when(BookFileHandler::loadAllBooks).thenReturn(new ArrayList<>());
+            cdMock.when(CDFileHandler::loadAllCDs).thenReturn(new ArrayList<>());
+            bookMock.when(() -> BookFileHandler.saveBook(any(Book.class))).thenAnswer(i -> null);
+            bookMock.when(() -> BookFileHandler.rewriteAllBooks(anyList())).thenAnswer(i -> null);
+            cdMock.when(() -> CDFileHandler.saveCD(any(CD.class))).thenAnswer(i -> null);
+            cdMock.when(() -> CDFileHandler.removeCDByCode(anyString())).thenAnswer(i -> null);
+            assertTrue(service.addBook("Book1", "Author1", "B001"));
+            assertTrue(service.addCD("CD1", "Artist1", "C001"));
+            assertFalse(service.removeByIsbn("B001"));
+            assertFalse(service.removeCDByCode("C001"));
+            assertEquals(0, service.searchBooks("").size());
+            assertEquals(0, service.searchCD("").size());
+        }
+    }
+    @Test
+    void removeByIsbn_ShouldReturnFalse_WhenIsbnNullOrEmpty() {
+        BookCDService service = new BookCDService(new ArrayList<>(), new ArrayList<>());
+
+        assertFalse(service.removeByIsbn(null));
+        assertFalse(service.removeByIsbn(""));
+        assertFalse(service.removeByIsbn("   "));
     }
 }

@@ -7,7 +7,7 @@ import java.util.Objects;
 
 public class User {
     private final String id;
-    private final String name;
+    private  String name;
     private final String email;
     private String password;
     private boolean hasUnpaidFines;
@@ -30,6 +30,7 @@ public class User {
     }
 
     public String getId() { return id; }
+    public void  setName(String name) { this.name = name; }
     public String getName() { return name; }
     public String getEmail() { return email; }
     public String getPassword() { return password; }

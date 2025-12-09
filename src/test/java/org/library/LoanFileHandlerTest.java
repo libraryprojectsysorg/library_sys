@@ -10,12 +10,15 @@ import org.library.Domain.User;
 import org.library.Service.Strategy.BookFileHandler;
 import org.library.Service.Strategy.LoanFileHandler;
 import org.library.Service.Strategy.UserFileHandler;
+import org.mockito.MockedStatic;
 
 import java.io.File;
+import java.io.PrintWriter;
 import java.time.LocalDate;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 class LoanFileHandlerTest {
 
@@ -111,5 +114,74 @@ class LoanFileHandlerTest {
         assertEquals(2, result.size());
         assertEquals("L1", result.get(0).getLoanId());
         assertEquals("L2", result.get(1).getLoanId());
+    }
+    @Test
+    void loadAllLoans_ShouldReturnEmptyList_WhenFileDoesNotExist() {
+
+        LoanFileHandler.setLoansFile("this_file_definitely_does_not_exist_12345.txt");
+
+        List<Loan> loans = loanFileHandler.loadAllLoans();
+
+        assertTrue(loans.isEmpty());
+
+    }
+
+    @Test
+    void loadAllLoans_ShouldSkipInvalidLines_AndContinue() throws Exception {
+        // نكتب سطر تالف في الملف يدويًا
+        try (PrintWriter writer = new PrintWriter(TEST_LOANS_FILE)) {
+            writer.println("L01,12345,U01,2025-01-01,invalid-date");
+            writer.println("L02,12345,U01,2025-01-01,2025-01-15");
+        }
+
+        List<Loan> loans = loanFileHandler.loadAllLoans();
+
+
+        assertEquals(1, loans.size());
+
+    }
+
+    @Test
+    void loadAllLoans_ShouldHandleIOException_Gracefully() throws Exception {
+
+        LoanFileHandler.setLoansFile("/invalid/path/loans.txt");
+
+        List<Loan> loans = loanFileHandler.loadAllLoans();
+
+        assertTrue(loans.isEmpty());
+
+    }
+
+    @Test
+    void loadAllLoans_ShouldSkipLoan_WhenUserOrMediaNotFound() throws Exception {
+
+        try (PrintWriter writer = new PrintWriter(TEST_LOANS_FILE)) {
+            writer.println("L99,99999,U99,2025-01-01,2025-01-15");
+        }
+
+        List<Loan> loans = loanFileHandler.loadAllLoans();
+
+
+    }
+
+    @Test
+    void isMediaBorrowed_ShouldReturnFalse_WhenLoanIsReturned() throws Exception {
+
+        User user = UserFileHandler.getUserByCredentials("test@user.com", "pass");
+        Book book = BookFileHandler.loadAllBooks().get(0);
+
+        Loan returnedLoan = new Loan("L88", book, user, LocalDate.now().minusDays(20), LocalDate.now().minusDays(6));
+
+
+        java.lang.reflect.Field f = Loan.class.getDeclaredField("returned");
+        f.setAccessible(true);
+        f.set(returnedLoan, true);
+
+        LoanFileHandler handler = spy(new LoanFileHandler());
+        doReturn(List.of(returnedLoan)).when(handler).loadAllLoans();
+
+        boolean result = handler.isMediaBorrowed("12345");
+
+        assertFalse(result, "الإعارة المرتجعة ما تُعتبرش مستعارة");
     }
 }
