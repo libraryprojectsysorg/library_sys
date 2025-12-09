@@ -5,6 +5,9 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.library.Service.strategy.*;
 import org.library.domain.*;
 import org.library.Service.strategy.fines.FineCalculator;
+import org.library.exception.MediaAlreadyBorrowedException;
+import org.library.exception.MediaNotAvailableException;
+import org.library.exception.UserCannotBorrowException;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -142,7 +145,7 @@ class AuthAdminTest {
     }
 
     @Test
-    void borrowMediaShouldSucceed() {
+    void borrowMediaShouldSucceed() throws MediaNotAvailableException, UserCannotBorrowException, MediaAlreadyBorrowedException {
         loginAsSuperAdmin();
         Media media = mock(Media.class);
         User user = mock(User.class);
@@ -212,7 +215,7 @@ class AuthAdminTest {
     }
 
     @Test
-    void borrowMedia_ShouldReturnTrue_OnSuccess() {
+    void borrowMedia_ShouldReturnTrue_OnSuccess() throws MediaNotAvailableException, UserCannotBorrowException, MediaAlreadyBorrowedException {
         Media media = mock(Media.class);
         User user = mock(User.class);
         Loan loan = mock(Loan.class);
@@ -223,7 +226,7 @@ class AuthAdminTest {
     }
 
     @Test
-    void borrowMedia_ShouldReturnFalse_OnException() {
+    void borrowMedia_ShouldReturnFalse_OnException() throws MediaNotAvailableException, UserCannotBorrowException, MediaAlreadyBorrowedException {
         Media media = mock(Media.class);
         User user = mock(User.class);
 
@@ -322,7 +325,7 @@ class AuthAdminTest {
 
 
     @Test
-    void borrowMedia_ShouldReturnTrue_WhenBorrowServiceReturnsLoan() {
+    void borrowMedia_ShouldReturnTrue_WhenBorrowServiceReturnsLoan() throws MediaNotAvailableException, UserCannotBorrowException, MediaAlreadyBorrowedException {
         Media media = mock(Media.class);
         User user = mock(User.class);
         when(borrowService.borrowMedia(media, user)).thenReturn(mock(Loan.class));

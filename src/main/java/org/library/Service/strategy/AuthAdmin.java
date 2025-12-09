@@ -2,6 +2,9 @@ package org.library.Service.strategy;
 
 import org.library.domain.*;
 import org.library.Service.strategy.fines.FineCalculator;
+import org.library.exception.MediaAlreadyBorrowedException;
+import org.library.exception.MediaNotAvailableException;
+import org.library.exception.UserCannotBorrowException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -187,6 +190,12 @@ public class AuthAdmin {
             return true;
         } catch (RuntimeException e) {
             return false;
+        } catch (MediaNotAvailableException e) {
+            throw new RuntimeException(e);
+        } catch (UserCannotBorrowException e) {
+            throw new RuntimeException(e);
+        } catch (MediaAlreadyBorrowedException e) {
+            throw new RuntimeException(e);
         }
     }
 

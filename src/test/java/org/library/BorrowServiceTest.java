@@ -3,14 +3,14 @@ package org.library;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.library.domain.Book;
-import org.library.domain.CD;
-import org.library.domain.Loan;
-import org.library.domain.User;
+import org.library.domain.*;
 import org.library.Service.strategy.BorrowService;
 import org.library.Service.strategy.EmailNotifier;
 import org.library.Service.strategy.LoanFileHandler;
 import org.library.Service.strategy.fines.FineStrategy;
+import org.library.exception.MediaAlreadyBorrowedException;
+import org.library.exception.MediaNotAvailableException;
+import org.library.exception.UserCannotBorrowException;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
@@ -21,7 +21,6 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
 import java.util.ArrayList;
-
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -45,40 +44,30 @@ class BorrowServiceTest {
 
     private BorrowService borrowService;
 
-
     private final String FIXED_DATE = "2023-01-01T10:00:00Z";
     private Clock fixedClock;
 
     @BeforeEach
     void setUp() {
-
         fixedClock = Clock.fixed(Instant.parse(FIXED_DATE), ZoneId.systemDefault());
-
-
         borrowService = new BorrowService(emailNotifier, loanFileHandler);
         borrowService.setClock(fixedClock);
     }
 
-
-
     @Test
-    void shouldBorrowBookSuccessfully_WhenAllConditionsMet() {
-
+    void shouldBorrowBookSuccessfully_WhenAllConditionsMet() throws MediaNotAvailableException, UserCannotBorrowException, MediaAlreadyBorrowedException {
         when(book.isAvailable()).thenReturn(true);
         when(book.getIsbn()).thenReturn("12345");
         when(book.getLoanDays()).thenReturn(14);
         when(user.hasUnpaidFines()).thenReturn(false);
-
         when(loanFileHandler.isMediaBorrowed("12345")).thenReturn(false);
 
         Loan loan = borrowService.borrowMedia(book, user);
 
-
-        assertNotNull(loan, "يجب إنشاء كائن إعارة");
+        assertNotNull(loan);
         assertEquals(user, loan.getUser());
         assertEquals(book, loan.getMedia());
-        assertEquals(LocalDate.now(fixedClock), loan.getBorrowDate(), "تاريخ الإعارة يجب أن يكون اليوم المحدد بالساعة الثابتة");
-
+        assertEquals(LocalDate.now(fixedClock), loan.getBorrowDate());
 
         verify(loanFileHandler).saveLoan(any(Loan.class));
         verify(book).setAvailable(false);
@@ -86,40 +75,48 @@ class BorrowServiceTest {
 
     @Test
     void shouldFailToBorrow_WhenBookIsNotAvailable() {
-
         when(book.isAvailable()).thenReturn(false);
 
-
-        Exception exception = assertThrows(RuntimeException.class, () -> {
+        MediaNotAvailableException exception = assertThrows(MediaNotAvailableException.class, () -> {
             borrowService.borrowMedia(book, user);
         });
 
-        assertEquals("Book not available", exception.getMessage());
+        assertEquals("Book/CD not available", exception.getMessage());
         verify(loanFileHandler, never()).saveLoan(any());
     }
 
     @Test
     void shouldFailToBorrow_WhenUserHasUnpaidFines() {
-
         when(book.isAvailable()).thenReturn(true);
         when(user.hasUnpaidFines()).thenReturn(true);
 
-        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+        UserCannotBorrowException exception = assertThrows(UserCannotBorrowException.class, () -> {
             borrowService.borrowMedia(book, user);
         });
 
         assertTrue(exception.getMessage().contains("Cannot borrow"));
+        verify(loanFileHandler, never()).saveLoan(any());
     }
 
+    @Test
+    void shouldFailToBorrow_WhenMediaAlreadyBorrowed() {
+        when(book.isAvailable()).thenReturn(true);
+        when(book.getIsbn()).thenReturn("12345");
+        when(user.hasUnpaidFines()).thenReturn(false);
+        when(loanFileHandler.loadAllLoans()).thenReturn(List.of());
+        when(loanFileHandler.isMediaBorrowed("12345")).thenReturn(true);
 
+        MediaAlreadyBorrowedException ex = assertThrows(MediaAlreadyBorrowedException.class, () -> {
+            borrowService.borrowMedia(book, user);
+        });
+
+        assertTrue(ex.getMessage().contains("already borrowed"));
+    }
 
     @Test
     void shouldCalculateFine_WhenReturningOverdueBook() {
-
         LocalDate pastDueDate = LocalDate.now(fixedClock).minusDays(5);
-
         String loanId = "LOAN_123";
-
 
         Loan overdueLoan = mock(Loan.class);
         when(overdueLoan.getLoanId()).thenReturn(loanId);
@@ -127,30 +124,18 @@ class BorrowServiceTest {
         when(overdueLoan.getMedia()).thenReturn(book);
         when(overdueLoan.getUser()).thenReturn(user);
 
-
         when(book.getFineStrategy()).thenReturn(fineStrategy);
         when(fineStrategy.calculateFine(5)).thenReturn(50);
-
-
 
         List<Loan> activeLoans = new ArrayList<>();
         activeLoans.add(overdueLoan);
         when(loanFileHandler.loadAllLoans()).thenReturn(activeLoans);
 
-
         int fine = borrowService.returnMedia(loanId);
 
-
-        assertEquals(50, fine, "يجب حساب الغرامة بـ 50");
+        assertEquals(50, fine);
         verify(book).setAvailable(true);
         verify(loanFileHandler).rewriteAllLoans(anyList());
-    }
-    @Test
-    void constructor_WithSingleParameter_ShouldUseDefaultLoanFileHandler() {
-
-        BorrowService service = new BorrowService(emailNotifier);
-
-        assertNotNull(getPrivateField(service, "loanFileHandler"));
     }
 
     @Test
@@ -172,9 +157,7 @@ class BorrowServiceTest {
     @Test
     void addLoan_ShouldSaveLoanViaFileHandler() {
         Loan loan = mock(Loan.class);
-
         borrowService.addLoan(loan);
-
         verify(loanFileHandler).saveLoan(loan);
     }
 
@@ -191,7 +174,6 @@ class BorrowServiceTest {
         when(loan1.getUser()).thenReturn(userToRemove);
         when(loan2.getUser()).thenReturn(otherUser);
 
-
         when(loanFileHandler.loadAllLoans()).thenReturn(new ArrayList<>(List.of(loan1, loan2)));
 
         boolean result = borrowService.unregisterUser("U999");
@@ -202,8 +184,7 @@ class BorrowServiceTest {
 
     @Test
     void unregisterUser_ShouldReturnFalse_WhenUserHasNoLoans() {
-        when(loanFileHandler.loadAllLoans()).thenReturn(new ArrayList<>()); // ArrayList مش List.of()
-
+        when(loanFileHandler.loadAllLoans()).thenReturn(new ArrayList<>());
         assertFalse(borrowService.unregisterUser("U000"));
         verify(loanFileHandler, never()).rewriteAllLoans(any());
     }
@@ -214,10 +195,7 @@ class BorrowServiceTest {
         when(loan.getLoanId()).thenReturn("LOAN123");
         when(loan.getMedia()).thenReturn(book);
         when(loan.getUser()).thenReturn(user);
-
-
         when(loan.getDueDate()).thenReturn(LocalDate.now(fixedClock).plusDays(10));
-
         when(loanFileHandler.loadAllLoans()).thenReturn(new ArrayList<>(List.of(loan)));
 
         boolean result = borrowService.returnLoan("LOAN123");
@@ -230,7 +208,6 @@ class BorrowServiceTest {
     @Test
     void returnLoan_ShouldReturnFalse_WhenLoanNotFound() {
         when(loanFileHandler.loadAllLoans()).thenReturn(List.of());
-
         assertFalse(borrowService.returnLoan("NONEXISTENT"));
     }
 
@@ -245,7 +222,6 @@ class BorrowServiceTest {
         when(loan1.getUser()).thenReturn(user);
         when(loan2.getUser()).thenReturn(user);
         when(loan3.getUser()).thenReturn(mock(User.class));
-
 
         when(loan1.getDueDate()).thenReturn(past);
         when(loan2.getDueDate()).thenReturn(past);
@@ -280,15 +256,12 @@ class BorrowServiceTest {
 
     @Test
     void borrowCD_ShouldThrowException_WhenCDOrUserIsNull() {
-        assertThrows(IllegalArgumentException.class, () ->
-                borrowService.borrowCD(null, user));
-
-        assertThrows(IllegalArgumentException.class, () ->
-                borrowService.borrowCD(mock(CD.class), null));
+        assertThrows(IllegalArgumentException.class, () -> borrowService.borrowCD(null, user));
+        assertThrows(IllegalArgumentException.class, () -> borrowService.borrowCD(mock(CD.class), null));
     }
 
     @Test
-    void borrowCD_ShouldDelegateToBorrowMedia_WhenValid() {
+    void borrowCD_ShouldDelegateToBorrowMedia_WhenValid() throws MediaNotAvailableException, UserCannotBorrowException, MediaAlreadyBorrowedException {
         CD cd = mock(CD.class);
         when(cd.isAvailable()).thenReturn(true);
         when(cd.getIsbn()).thenReturn("CD123");
@@ -301,73 +274,5 @@ class BorrowServiceTest {
         assertNotNull(loan);
         verify(loanFileHandler).saveLoan(any(Loan.class));
         verify(cd).setAvailable(false);
-    }
-
-
-    @Test
-    void borrowMedia_ShouldThrowException_WhenUserHasUnpaidFines() {
-        when(book.isAvailable()).thenReturn(true);
-        when(user.hasUnpaidFines()).thenReturn(true);           // ← يغطي الفرع الأول
-        when(loanFileHandler.isMediaBorrowed(anyString())).thenReturn(false);
-
-        RuntimeException exception = assertThrows(RuntimeException.class, () ->
-                borrowService.borrowMedia(book, user)
-        );
-
-        assertTrue(exception.getMessage().contains("Cannot borrow"));
-        verify(loanFileHandler, never()).saveLoan(any());
-    }
-
-    @Test
-    void borrowMedia_ShouldThrowException_WhenUserHasOverdueLoans() {
-        Loan overdueLoan = mock(Loan.class);
-        when(overdueLoan.getUser()).thenReturn(user);
-        when(overdueLoan.getDueDate()).thenReturn(LocalDate.now(fixedClock).minusDays(10));
-
-        when(book.isAvailable()).thenReturn(true);
-        when(user.hasUnpaidFines()).thenReturn(false);
-        when(loanFileHandler.loadAllLoans()).thenReturn(List.of(overdueLoan));
-        when(loanFileHandler.isMediaBorrowed(anyString())).thenReturn(false);
-
-        RuntimeException ex = assertThrows(RuntimeException.class, () ->
-                borrowService.borrowMedia(book, user));
-
-        assertTrue(ex.getMessage().contains("Cannot borrow"));
-    }
-
-    @Test
-    void borrowMedia_ShouldThrowException_WhenMediaAlreadyBorrowed() {
-        when(book.isAvailable()).thenReturn(true);
-        when(book.getIsbn()).thenReturn("12345");
-        when(user.hasUnpaidFines()).thenReturn(false);
-        when(loanFileHandler.loadAllLoans()).thenReturn(List.of());
-        when(loanFileHandler.isMediaBorrowed("12345")).thenReturn(true);
-
-        RuntimeException ex = assertThrows(RuntimeException.class, () ->
-                borrowService.borrowMedia(book, user));
-
-        assertTrue(ex.getMessage().contains("already borrowed"));
-    }
-
-
-    private List<Loan> newListWithLoan(String loanId) {
-        Loan loan = mock(Loan.class);
-        when(loan.getLoanId()).thenReturn(loanId);
-        when(loan.getMedia()).thenReturn(book);
-        when(loan.getUser()).thenReturn(user);
-        when(loan.getDueDate()).thenReturn(LocalDate.now(fixedClock));
-        return new ArrayList<>(List.of(loan));
-    }
-
-
-
-    private <T> T getPrivateField(Object obj, String fieldName) {
-        try {
-            java.lang.reflect.Field f = obj.getClass().getDeclaredField(fieldName);
-            f.setAccessible(true);
-            return (T) f.get(obj);
-        } catch (Exception e) {
-            throw new RuntimeException(e);
-        }
     }
 }

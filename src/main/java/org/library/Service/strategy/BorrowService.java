@@ -1,6 +1,7 @@
 package org.library.Service.strategy;
 
 import org.library.domain.*;
+import org.library.exception.*;
 import java.time.Clock;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
@@ -9,7 +10,6 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 public class BorrowService {
-
 
     private static final Logger LOGGER = Logger.getLogger(BorrowService.class.getName());
 
@@ -31,15 +31,19 @@ public class BorrowService {
         return loanFileHandler.loadAllLoans();
     }
 
-    public Loan borrowMedia(Media media, User user) {
+    public Loan borrowMedia(Media media, User user)
+            throws MediaNotAvailableException, UserCannotBorrowException, MediaAlreadyBorrowedException {
+
         if (!media.isAvailable()) {
-            throw new RuntimeException("Book not available");
+            throw new MediaNotAvailableException("Book/CD not available");
         }
+
         if (user.hasUnpaidFines() || hasOverdueLoans(user)) {
-            throw new RuntimeException("Cannot borrow: overdue books or unpaid fines");
+            throw new UserCannotBorrowException("Cannot borrow: overdue books or unpaid fines");
         }
+
         if (loanFileHandler.isMediaBorrowed(media.getIsbn())) {
-            throw new RuntimeException("This item is already borrowed by another user.");
+            throw new MediaAlreadyBorrowedException("This item is already borrowed by another user.");
         }
 
         LocalDate borrowDate = LocalDate.now(clock);
@@ -58,15 +62,18 @@ public class BorrowService {
                 .filter(l -> l.getLoanId().equals(loanId))
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("Loan not found in active loans."));
+
         activeLoans.remove(loan);
         loanFileHandler.rewriteAllLoans(activeLoans);
         loan.getMedia().setAvailable(true);
+
         int fineAmount = calculateFineForLoan(loan);
         if (fineAmount > 0) {
             Fine fine = new Fine(fineAmount);
             FineFileManager.addFineForUser(loan.getUser(), fine);
             LOGGER.log(Level.WARNING, "تم إضافة غرامة للمستخدم: {0} NIS", fineAmount);
         }
+
         return fineAmount;
     }
 
@@ -128,10 +135,13 @@ public class BorrowService {
         this.clock = mockClock;
     }
 
-    public Loan borrowCD(CD cd, User user) {
+    public Loan borrowCD(CD cd, User user)
+            throws MediaNotAvailableException, UserCannotBorrowException, MediaAlreadyBorrowedException {
+
         if (cd == null || user == null) {
             throw new IllegalArgumentException("Invalid CD or user.");
         }
+
         return borrowMedia(cd, user);
     }
 }
