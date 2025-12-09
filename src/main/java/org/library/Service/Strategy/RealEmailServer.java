@@ -3,7 +3,7 @@ package org.library.Service.Strategy;
 import io.github.cdimascio.dotenv.Dotenv;
 import jakarta.mail.*;
 import jakarta.mail.internet.*;
-import org.library.Domain.EmailMessage;
+import org.library.domain.EmailMessage;
 
 import java.util.Properties;
 

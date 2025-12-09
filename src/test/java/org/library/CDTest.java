@@ -1,8 +1,8 @@
 package org.library;
 
 import org.junit.jupiter.api.Test;
-import org.library.Domain.CD;
-import org.library.Domain.Media;
+import org.library.domain.CD;
+import org.library.domain.Media;
 import org.library.Service.Strategy.fines.CDFineStrategy;
 import org.library.Service.Strategy.fines.FineStrategy;
 

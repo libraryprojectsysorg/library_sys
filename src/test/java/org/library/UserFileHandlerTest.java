@@ -2,7 +2,7 @@ package org.library;
 
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.io.TempDir;
-import org.library.Domain.User;
+import org.library.domain.User;
 import org.library.Service.Strategy.UserFileHandler;
 import org.mockito.MockedStatic;
 

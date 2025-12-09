@@ -1,7 +1,7 @@
 package org.library.Service.Strategy;
 
-import org.library.Domain.OverdueReport;
-import org.library.Domain.User;
+import org.library.domain.OverdueReport;
+import org.library.domain.User;
 
 import java.util.List;
 

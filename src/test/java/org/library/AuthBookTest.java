@@ -1,7 +1,7 @@
 package org.library;
 
 import org.junit.jupiter.api.*;
-import org.library.Domain.Book;
+import org.library.domain.Book;
 import org.library.Service.Strategy.BookFileHandler;
 import org.library.Service.Strategy.BookCDService;
 

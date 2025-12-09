@@ -2,7 +2,7 @@ package org.library;
 
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.io.TempDir;
-import org.library.Domain.CD;
+import org.library.domain.CD;
 import org.library.Service.Strategy.CDFileHandler;
 
 import java.nio.file.Path;

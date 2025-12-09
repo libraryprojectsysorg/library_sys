@@ -1,6 +1,6 @@
 package org.library.Service.Strategy;
-import org.library.Domain.Book;
-import org.library.Domain.CD;
+import org.library.domain.Book;
+import org.library.domain.CD;
 import java.util.List;
 import java.util.stream.Collectors;
 

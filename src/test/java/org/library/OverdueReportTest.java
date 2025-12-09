@@ -2,8 +2,8 @@ package org.library;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.library.Domain.OverdueReport;
-import org.library.Domain.User;
+import org.library.domain.OverdueReport;
+import org.library.domain.User;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;

@@ -3,9 +3,9 @@ package org.library;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.library.Domain.Book;
-import org.library.Domain.Loan;
-import org.library.Domain.User;
+import org.library.domain.Book;
+import org.library.domain.Loan;
+import org.library.domain.User;
 
 import org.library.Service.Strategy.BookFileHandler;
 import org.library.Service.Strategy.LoanFileHandler;

@@ -1,4 +1,4 @@
-package org.library.Domain;
+package org.library.domain;
 
 import org.library.Service.Strategy.fines.CDFineStrategy;
 import org.library.Service.Strategy.fines.FineStrategy;
@@ -8,7 +8,7 @@ import org.library.Service.Strategy.fines.FineStrategy;
  * @author Weam Ahmad
  * @author  Seba Abd Aljwwad
  * @version 1.1
- * @see org.library.Domain.Media
+ * @see org.library.domain.Media
  */
 public class CD extends Media {
 

@@ -1,4 +1,4 @@
-package org.library.Domain;
+package org.library.domain;
 
 /**
  * Value object for email notifications (Sprint 3).

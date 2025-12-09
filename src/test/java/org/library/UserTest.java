@@ -3,8 +3,8 @@ package org.library;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.library.Domain.Fine;
-import org.library.Domain.User;
+import org.library.domain.Fine;
+import org.library.domain.User;
 
 import java.util.ArrayList;
 import java.util.List;

@@ -1,7 +1,7 @@
 package org.library.Service.Strategy;
 
-import org.library.Domain.EmailMessage;
-import org.library.Domain.User;
+import org.library.domain.EmailMessage;
+import org.library.domain.User;
 
 
 

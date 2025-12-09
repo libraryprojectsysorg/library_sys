@@ -1,7 +1,7 @@
 package org.library.Service.Strategy;
 
-import org.library.Domain.Fine;
-import org.library.Domain.User;
+import org.library.domain.Fine;
+import org.library.domain.User;
 
 import java.io.*;
 import java.util.ArrayList;

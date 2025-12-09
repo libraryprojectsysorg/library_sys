@@ -2,9 +2,9 @@
 package org.library;
 
 import org.junit.jupiter.api.Test;
-import org.library.Domain.Loan;
-import org.library.Domain.Media;
-import org.library.Domain.User;
+import org.library.domain.Loan;
+import org.library.domain.Media;
+import org.library.domain.User;
 
 import java.time.LocalDate;
 import static org.junit.jupiter.api.Assertions.*;

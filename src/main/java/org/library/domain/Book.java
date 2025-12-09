@@ -1,4 +1,4 @@
-package org.library.Domain;
+package org.library.domain;
 
 import org.library.Service.Strategy.fines.BookFineStrategy;
 import org.library.Service.Strategy.fines.FineStrategy;

@@ -1,7 +1,7 @@
 package org.library;
 
 import org.junit.jupiter.api.Test;
-import org.library.Domain.Admin;
+import org.library.domain.Admin;
 
 import static org.junit.jupiter.api.Assertions.*;
 
