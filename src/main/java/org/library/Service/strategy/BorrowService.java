@@ -5,8 +5,13 @@ import java.time.Clock;
 import java.time.LocalDate;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public class BorrowService {
+
+
+    private static final Logger LOGGER = Logger.getLogger(BorrowService.class.getName());
 
     private Clock clock = Clock.systemDefaultZone();
     @SuppressWarnings("unused")
@@ -60,7 +65,7 @@ public class BorrowService {
         if (fineAmount > 0) {
             Fine fine = new Fine(fineAmount);
             FineFileManager.addFineForUser(loan.getUser(), fine);
-            System.out.println("⚠️ تم إضافة غرامة للمستخدم: " + fineAmount + " NIS");
+            LOGGER.log(Level.WARNING, "تم إضافة غرامة للمستخدم: {0} NIS", fineAmount);
         }
         return fineAmount;
     }

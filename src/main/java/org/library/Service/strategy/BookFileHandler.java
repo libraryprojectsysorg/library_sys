@@ -44,7 +44,9 @@ public class BookFileHandler {
                     books.add(new Book(parts[0], parts[1], parts[2]));
                 }
             }
-        } catch (FileNotFoundException e) { }
+        } catch (FileNotFoundException e) {
+            // الملف غير موجود عند أول تشغيل، وهذا سلوك متوقع لذلك يتم تجاهل الخطأ.
+        }
         catch (IOException e) {
             LOGGER.log(Level.SEVERE, "خطأ أثناء قراءة ملف الكتب", e);
         }
