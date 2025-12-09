@@ -32,7 +32,7 @@ class AuthAdminTest {
     void setUp() throws Exception {
         authAdmin = new AuthAdmin(borrowService, reminderService, fineCalculator, bookCDService);
 
-        // نفرغ الـ users list ونحقن قايمة جديدة عشان نتحكم فيها
+
         Field usersField = AuthAdmin.class.getDeclaredField("users");
         usersField.setAccessible(true);
         usersField.set(authAdmin, new ArrayList<User>());
@@ -41,7 +41,7 @@ class AuthAdminTest {
     @Test
     void superAdminShouldLoginSuccessfully() {
 
-        try (MockedStatic<UserFileHandler> mocked = Mockito.mockStatic(UserFileHandler.class)) {
+        try (MockedStatic<UserFileHandler> mocked = mockStatic(UserFileHandler.class)) {
             User superAdmin = new User("SA001", "Library Super Admin", "default_super@library.com");
             setPrivateField(superAdmin, "role", "SUPER_ADMIN");
 

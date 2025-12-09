@@ -13,10 +13,12 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.logging.Logger;
+import java.util.logging.Level;
 
 public class LoanFileHandler {
 
-
+    private static final Logger logger = Logger.getLogger(LoanFileHandler.class.getName());
     private static String LOANS_FILE = "loans.txt";
 
 
@@ -49,12 +51,12 @@ public class LoanFileHandler {
                             loans.add(new Loan(loanId, media, user, borrowDate, dueDate));
                         }
                     } catch (Exception e) {
-                        System.err.println("خطأ في تحليل السطر: " + line);
+                        logger.log(Level.WARNING, "خطأ في تحليل السطر: " + line, e);
                     }
                 }
             }
         } catch (IOException e) {
-            System.err.println("خطأ في قراءة الملف: " + e.getMessage());
+            logger.log(Level.SEVERE, "خطأ في قراءة الملف: " + e.getMessage(), e);
         }
         return loans;
     }
@@ -69,7 +71,7 @@ public class LoanFileHandler {
                     loan.getDueDate());
             writer.println(line);
         } catch (IOException e) {
-            System.err.println("خطأ في حفظ الإعارة: " + e.getMessage());
+            logger.log(Level.SEVERE, "خطأ في حفظ الإعارة: " + e.getMessage(), e);
         }
     }
 
@@ -85,7 +87,7 @@ public class LoanFileHandler {
                 writer.println(line);
             }
         } catch (IOException e) {
-            System.err.println("خطأ في إعادة كتابة الملف: " + e.getMessage());
+            logger.log(Level.SEVERE, "خطأ في إعادة كتابة الملف: " + e.getMessage(), e);
         }
     }
 

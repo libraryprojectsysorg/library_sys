@@ -25,7 +25,7 @@ class UserFileHandlerTest {
     void setUp() {
         testFile = tempDir.resolve("users_test.txt").toString();
         UserFileHandler.setUsersFile(testFile);
-        // نضمن إن الملف فاضي
+
         new java.io.File(testFile).delete();
     }
 
