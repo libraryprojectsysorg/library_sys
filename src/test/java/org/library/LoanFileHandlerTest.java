@@ -160,6 +160,7 @@ class LoanFileHandlerTest {
         }
 
         List<Loan> loans = loanFileHandler.loadAllLoans();
+        assertTrue(loans.isEmpty(), "الإعارة اللي اليوزر أو الكتاب مش موجودين لازم تتجاهل");
 
 
     }
