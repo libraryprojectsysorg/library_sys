@@ -52,7 +52,8 @@ class ReminderServiceTest {
         String expectedMessage = "You have 3 overdue book(s).";
 
 
-        verify(mockObserver, times(1)).notify(eq(user), eq(expectedMessage));
+        verify(mockObserver, times(1)).notify(user, expectedMessage);
+
     }
 
     @Test

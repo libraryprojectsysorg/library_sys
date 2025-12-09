@@ -55,8 +55,8 @@ class FineTest {
 
         assertNotEquals(base, new Fine(400, false));  // different amount
         assertNotEquals(base, new Fine(500, true));   // different paid status
-        assertNotEquals(base, null);
-        assertNotEquals(base, "not a Fine");
+        assertNotEquals(null, base);
+        assertNotEquals("not a Fine",base );
     }
 
     @Test
@@ -89,7 +89,7 @@ class FineTest {
         Fine fine = new Fine(123);
 
 
-        assertEquals(fine.getAmount(), 123);
+        assertEquals(123, fine.getAmount());
 
         fine.setPaid(true);
         assertTrue(fine.isPaid());

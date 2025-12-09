@@ -44,12 +44,12 @@ class BorrowServiceTest {
 
     private BorrowService borrowService;
 
-    private final String FIXED_DATE = "2023-01-01T10:00:00Z";
+    private final String fixedDate= "2023-01-01T10:00:00Z";
     private Clock fixedClock;
 
     @BeforeEach
     void setUp() {
-        fixedClock = Clock.fixed(Instant.parse(FIXED_DATE), ZoneId.systemDefault());
+        fixedClock = Clock.fixed(Instant.parse(fixedDate), ZoneId.systemDefault());
         borrowService = new BorrowService(emailNotifier, loanFileHandler);
         borrowService.setClock(fixedClock);
     }

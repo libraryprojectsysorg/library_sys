@@ -8,22 +8,29 @@ import java.util.UUID;
 
 public class UserFileHandler {
 
+    private UserFileHandler() {
+        // Private constructor to prevent instantiation
+    }
 
-    private static String USERS_FILE = "users.txt";
+    private static final String ROLE_ADMIN = "ADMIN";
+    private static final String ROLE_USER = "USER";
+    private static final String ROLE_SUPER_ADMIN = "SUPER_ADMIN";
 
+    private static String  usersFile = "users.txt";
 
     public static void setUsersFile(String filePath) {
-        USERS_FILE = filePath;
+        usersFile = filePath;
     }
 
     public static boolean saveUser(String email, String password, String role, String id, String name) {
 
-        if (role == null || role.isEmpty() || !role.equalsIgnoreCase("ADMIN")) {
-            role = "USER";
+
+        if (role == null || role.isEmpty() || !role.equalsIgnoreCase(ROLE_ADMIN)) {
+            role = ROLE_USER;
             if (id == null || id.isEmpty()) {
                 id = "U" + UUID.randomUUID().toString().substring(0, 5).toUpperCase();
             }
-        } else if (role.equalsIgnoreCase("ADMIN")) {
+        } else {
             if (id == null || id.isEmpty()) {
                 id = "A001";
             }
@@ -31,7 +38,7 @@ public class UserFileHandler {
 
         String userData = email + "," + password + "," + role + "," + id + "," + name;
 
-        try (FileWriter writer = new FileWriter(USERS_FILE, true);
+        try (FileWriter writer = new FileWriter( usersFile, true);
              PrintWriter printWriter = new PrintWriter(writer)) {
 
             printWriter.println(userData);
@@ -46,8 +53,7 @@ public class UserFileHandler {
     public static List<User> loadAllUsers() {
         List<User> users = new ArrayList<>();
 
-
-        try (BufferedReader reader = new BufferedReader(new FileReader(USERS_FILE))) {
+        try (BufferedReader reader = new BufferedReader(new FileReader( usersFile))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 String[] parts = line.split(",");
@@ -59,13 +65,15 @@ public class UserFileHandler {
                     users.add(new User(id, name, email, role));
                 }
             }
-        } catch (IOException ignored) { }
+        } catch (IOException ignored) {
+            // Ignored intentionally
+        }
 
         return users;
     }
 
     public static User getUserByCredentials(String email, String password) {
-        try (BufferedReader reader = new BufferedReader(new FileReader(USERS_FILE))) {
+        try (BufferedReader reader = new BufferedReader(new FileReader( usersFile))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 String[] parts = line.split(",");
@@ -76,13 +84,15 @@ public class UserFileHandler {
                     return new User(id, name, email, role);
                 }
             }
-        } catch (IOException ignored) { }
+        } catch (IOException ignored) {
+            // Ignored intentionally
+        }
 
         return null;
     }
 
     public static String getUserRole(String email) {
-        try (BufferedReader reader = new BufferedReader(new FileReader(USERS_FILE))) {
+        try (BufferedReader reader = new BufferedReader(new FileReader( usersFile))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 String[] parts = line.split(",");
@@ -90,7 +100,9 @@ public class UserFileHandler {
                     return parts[2];
                 }
             }
-        } catch (IOException ignored) { }
+        } catch (IOException ignored) {
+            // Ignored intentionally
+        }
 
         return null;
     }
@@ -99,49 +111,71 @@ public class UserFileHandler {
         List<String> updatedLines = new ArrayList<>();
         boolean removed = false;
 
-        try (BufferedReader reader = new BufferedReader(new FileReader(USERS_FILE))) {
+        try (BufferedReader reader = new BufferedReader(new FileReader( usersFile))) {
             String line;
             while ((line = reader.readLine()) != null) {
-                String[] parts = line.split(",");
-                if (parts.length >= 5 && parts[3].equals(userId)) {
-                    String targetRole = parts[2];
 
-                    if ("SUPER_ADMIN".equals(targetRole) && !"SUPER_ADMIN".equals(requesterRole)) {
-                        updatedLines.add(line);
-                    } else if ("ADMIN".equals(targetRole) && "ADMIN".equals(requesterRole)) {
-                        updatedLines.add(line);
-                    } else {
-                        removed = true;
-                    }
-                } else {
+                if (!isTargetUser(line, userId)) {
                     updatedLines.add(line);
+                    continue;
+                }
+
+                String targetRole = extractRole(line);
+
+                if (shouldSkipRemoval(targetRole, requesterRole)) {
+                    updatedLines.add(line);
+                } else {
+                    removed = true;
                 }
             }
+
         } catch (IOException e) {
             return false;
         }
 
-        if (removed) {
-            try (PrintWriter writer = new PrintWriter(new FileWriter(USERS_FILE, false))) {
-                for (String l : updatedLines) writer.println(l);
-            } catch (IOException e) {
-                return false;
-            }
+        if (removed && !writeUpdatedFile(updatedLines)) {
+            return false;
         }
 
         return removed;
+    }
+
+    private static boolean isTargetUser(String line, String userId) {
+        String[] parts = line.split(",");
+        return parts.length >= 5 && parts[3].equals(userId);
+    }
+
+    private static String extractRole(String line) {
+        return line.split(",")[2];
+    }
+
+    private static boolean shouldSkipRemoval(String targetRole, String requesterRole) {
+        if (ROLE_SUPER_ADMIN.equals(targetRole) && !ROLE_SUPER_ADMIN.equals(requesterRole)) {
+            return true;
+        }
+        return ROLE_ADMIN.equals(targetRole) && ROLE_ADMIN.equals(requesterRole);
+    }
+
+    private static boolean writeUpdatedFile(List<String> updatedLines) {
+        try (PrintWriter writer = new PrintWriter(new FileWriter( usersFile, false))) {
+            for (String l : updatedLines) writer.println(l);
+            return true;
+        } catch (IOException e) {
+            return false;
+        }
     }
 
     public static boolean updateUser(User user) {
         List<String> updatedLines = new ArrayList<>();
         boolean found = false;
 
-        try (BufferedReader reader = new BufferedReader(new FileReader(USERS_FILE))) {
+        try (BufferedReader reader = new BufferedReader(new FileReader( usersFile))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 String[] parts = line.split(",");
                 if (parts.length >= 5 && parts[0].equalsIgnoreCase(user.getEmail())) {
-                    String newLine = user.getEmail() + "," + user.getPassword() + "," + user.getRole() + "," + user.getId() + "," + user.getName();
+                    String newLine = user.getEmail() + "," + user.getPassword() + "," +
+                            user.getRole() + "," + user.getId() + "," + user.getName();
                     updatedLines.add(newLine);
                     found = true;
                 } else {
@@ -154,12 +188,6 @@ public class UserFileHandler {
 
         if (!found) return false;
 
-        try (PrintWriter writer = new PrintWriter(new FileWriter(USERS_FILE, false))) {
-            for (String l : updatedLines) writer.println(l);
-        } catch (IOException e) {
-            return false;
-        }
-
-        return true;
+        return writeUpdatedFile(updatedLines);
     }
 }

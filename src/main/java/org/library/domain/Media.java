@@ -9,7 +9,9 @@ import org.library.Service.strategy.fines.FineStrategy;
  * @version 1.0
  */
 public abstract class Media {
-    protected final String title, author, isbn;
+    protected final String title;
+    protected final String author;
+    protected final String isbn;
     protected boolean available = true;
 
     /**
@@ -19,7 +21,7 @@ public abstract class Media {
      * @param isbn .
      * @throws IllegalArgumentException .
      */
-    public Media(String title, String author, String isbn) {
+    protected Media(String title, String author, String isbn) {
         if (title == null || author == null || isbn == null || title.isEmpty() || author.isEmpty() || isbn.isEmpty()) {
             throw new IllegalArgumentException("Invalid media details: title, author, or ISBN cannot be null or empty");
         }

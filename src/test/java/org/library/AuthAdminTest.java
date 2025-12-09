@@ -448,7 +448,9 @@ class AuthAdminTest {
             f.setAccessible(true);
             List<User> list = (List<User>) f.get(authAdmin);
             list.add(user);
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+            // Ignored because this helper is used only in controlled test scenarios
+        }
     }
 
     private void setPrivateField(Object obj, String fieldName, Object value) {
@@ -456,6 +458,8 @@ class AuthAdminTest {
             Field f = obj.getClass().getDeclaredField(fieldName);
             f.setAccessible(true);
             f.set(obj, value);
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+            // Ignored because this helper is used only in controlled test scenarios
+        }
     }
 }

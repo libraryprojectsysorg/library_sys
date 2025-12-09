@@ -142,7 +142,7 @@ class LoanFileHandlerTest {
     }
 
     @Test
-    void loadAllLoans_ShouldHandleIOException_Gracefully() throws Exception {
+    void loadAllLoans_ShouldHandleIOException_Gracefully() {
 
         LoanFileHandler.setLoansFile("/invalid/path/loans.txt");
 

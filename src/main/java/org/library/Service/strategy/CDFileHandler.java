@@ -1,26 +1,27 @@
 package org.library.Service.strategy;
+
 import org.library.domain.CD;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
-/**
- * @author Weam Ahmad
- * @author Seba Abd Aljwwad
- * @version 1.0
- */
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 public class CDFileHandler {
+
+    private static final Logger logger = Logger.getLogger(CDFileHandler.class.getName());
+
     private static String cdsFile = "cds.txt";
+
+    private CDFileHandler() {}
+
     public static void setCdsFile(String filePath) {
         cdsFile = filePath;
     }
-    /**
-     * Save a CD to file.
-     * @param cd CD object
-     * @return true if added, false if already exists
-     */
+
     public static boolean saveCD(CD cd) {
         List<CD> cds = loadAllCDs();
-
+        String cdTitle = cd.getTitle();
 
         for (CD c : cds) {
             if (c.getIsbn().equals(cd.getIsbn())) {
@@ -30,24 +31,20 @@ public class CDFileHandler {
 
         try (FileWriter writer = new FileWriter(cdsFile, true);
              PrintWriter printWriter = new PrintWriter(writer)) {
-            String cdData = cd.getTitle() + "," + cd.getAuthor() + "," + cd.getIsbn();
+            String cdData = cdTitle + "," + cd.getAuthor() + "," + cd.getIsbn();
             printWriter.println(cdData);
             return true;
         } catch (IOException e) {
-            System.err.println("❌ خطأ أثناء حفظ CD: " + e.getMessage());
+            logger.log(Level.SEVERE, "خطأ أثناء حفظ CD: " + cdTitle, e);
             return false;
         }
     }
 
-    /**
-     * Remove a CD by its code (ISBN)
-     * @param code CD code
-     * @return true if removed
-     */
     public static boolean removeCDByCode(String code) {
         List<CD> cds = loadAllCDs();
         boolean removed = cds.removeIf(cd -> cd.getIsbn().equals(code));
         if (!removed) return false;
+
         try (FileWriter writer = new FileWriter(cdsFile, false);
              PrintWriter printWriter = new PrintWriter(writer)) {
             for (CD cd : cds) {
@@ -56,20 +53,17 @@ public class CDFileHandler {
             }
             return true;
         } catch (IOException e) {
-            System.err.println("❌ خطأ أثناء إعادة كتابة ملف CDs: " + e.getMessage());
+            logger.log(Level.SEVERE, "خطأ أثناء إعادة كتابة ملف CDs: " + code, e);
             return false;
         }
     }
 
-    /**
-     * Load all CDs from file
-     * @return list of CDs
-     */
     public static List<CD> loadAllCDs() {
         List<CD> cds = new ArrayList<>();
         File file = new File(cdsFile);
         if (!file.exists()) return cds;
-       try (BufferedReader reader = new BufferedReader(new FileReader(cdsFile))) {
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(cdsFile))) {
             String line;
             while ((line = reader.readLine()) != null) {
                 String[] parts = line.split(",", 3);
@@ -78,16 +72,12 @@ public class CDFileHandler {
                 }
             }
         } catch (IOException e) {
-            System.err.println("❌ خطأ أثناء قراءة ملف CDs: " + e.getMessage());
+            logger.log(Level.SEVERE, "خطأ أثناء قراءة ملف CDs", e);
         }
 
         return cds;
     }
 
-    /**
-     * Rewrite all CDs to file
-     * @param cds list of CDs
-     */
     public static void rewriteAllCDs(List<CD> cds) {
         try (FileWriter writer = new FileWriter(cdsFile, false);
              PrintWriter printWriter = new PrintWriter(writer)) {
@@ -96,7 +86,7 @@ public class CDFileHandler {
                 printWriter.println(cdData);
             }
         } catch (IOException e) {
-            System.err.println("❌ خطأ أثناء إعادة كتابة ملف CDs: " + e.getMessage());
+            logger.log(Level.SEVERE, "خطأ أثناء إعادة كتابة ملف CDs", e);
         }
     }
 }

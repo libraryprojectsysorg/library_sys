@@ -190,11 +190,7 @@ public class AuthAdmin {
             return true;
         } catch (RuntimeException e) {
             return false;
-        } catch (MediaNotAvailableException e) {
-            throw new RuntimeException(e);
-        } catch (UserCannotBorrowException e) {
-            throw new RuntimeException(e);
-        } catch (MediaAlreadyBorrowedException e) {
+        } catch (MediaNotAvailableException | UserCannotBorrowException | MediaAlreadyBorrowedException e) {
             throw new RuntimeException(e);
         }
     }

@@ -24,12 +24,11 @@ class BookCDServiceTest {
 
     @BeforeEach
     void setUp(@TempDir Path tempDir) {
-        // ضبط مسار الملفات المؤقتة عشان الـ FileHandler يشتغل صح
+
         BookFileHandler.setBooksFile(tempDir.resolve("books.txt").toString());
         CDFileHandler.setCdsFile(tempDir.resolve("cds.txt").toString());
 
-        // التعديل المهم: نستخدم القنصر اللي بياخد الليستات (in-memory mode)
-        // عشان نغطي كل الـ branches اللي فيها books != null و cds != null
+
         service = new BookCDService(new ArrayList<>(), new ArrayList<>());
     }
 
@@ -162,7 +161,7 @@ class BookCDServiceTest {
         List<Book> books = new ArrayList<>();
         List<CD> cds = new ArrayList<>();
 
-        BookCDService service = new BookCDService(books, cds);
+         service = new BookCDService(books, cds);
 
         service.addBook("Java", "Ahmad", "111");
         service.addCD("Hits", "Artist", "CD111");
@@ -175,7 +174,7 @@ class BookCDServiceTest {
         List<Book> injectedBooks = new ArrayList<>();
         List<CD> injectedCds = new ArrayList<>();
 
-        BookCDService service = new BookCDService(injectedBooks, injectedCds);
+        service = new BookCDService(injectedBooks, injectedCds);
 
         service.addBook("Java Book", "Ahmad", "ISBN123");
 
@@ -184,7 +183,7 @@ class BookCDServiceTest {
     }
     @Test
     void shouldUseFileHandlers_WhenListsAreNull() {
-        BookCDService service = new BookCDService(); // books = null, cds = null
+         service = new BookCDService();
 
         try (MockedStatic<BookFileHandler> bookMock = mockStatic(BookFileHandler.class);
              MockedStatic<CDFileHandler> cdMock = mockStatic(CDFileHandler.class)) {
@@ -204,7 +203,7 @@ class BookCDServiceTest {
     }
     @Test
     void removeByIsbn_ShouldReturnFalse_WhenIsbnNullOrEmpty() {
-        BookCDService service = new BookCDService(new ArrayList<>(), new ArrayList<>());
+        service = new BookCDService(new ArrayList<>(), new ArrayList<>());
 
         assertFalse(service.removeByIsbn(null));
         assertFalse(service.removeByIsbn(""));

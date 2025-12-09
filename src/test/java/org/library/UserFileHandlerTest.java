@@ -202,7 +202,7 @@ class UserFileHandlerTest {
             assertTrue(UserFileHandler.loadAllUsers().isEmpty());
 
 
-            mocked.verify(() -> UserFileHandler.loadAllUsers());
+            mocked.verify(UserFileHandler::loadAllUsers);
         }
     }
 }
