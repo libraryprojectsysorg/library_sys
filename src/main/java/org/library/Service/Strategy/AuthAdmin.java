@@ -8,15 +8,20 @@ import java.util.List;
 
 public class AuthAdmin {
 
+    @SuppressWarnings("unused")
+    private String loggedInEmail;
 
     private final List<User> users;
     private boolean isLoggedIn = false;
-    private String loggedInEmail = null;
+
+
     private Role loggedInRole = null;
 
     private final BookCDService bookCDService;
     private final BorrowService borrowService;
-    private final ReminderService reminderService;
+    @SuppressWarnings("unused")
+    private ReminderService reminderService;
+
     private final FineCalculator fineCalculator;
 
     private static final String SUPER_ADMIN_EMAIL = System.getenv("ADMIN_EMAIL") != null ? System.getenv("ADMIN_EMAIL") : "default_super@library.com";
@@ -161,6 +166,10 @@ public class AuthAdmin {
 
     public int returnMedia(Loan loan) {
         return borrowService.returnMedia(loan.getLoanId());
+    }
+
+    public String getErrorMessage() {
+        return !isLoggedIn ? "Invalid credentials - please try again." : "Login successful";
     }
 
 

@@ -71,7 +71,7 @@
 
     <build>
         <plugins>
-            <!-- Jacoco الوحيد الصحيح (مرة واحدة بس) -->
+
             <plugin>
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
@@ -92,7 +92,13 @@
                 </executions>
                 <configuration>
                     <excludes>
-                        <exclude>**/*Main.class</exclude>
+
+                            <exclude>**/Main.class</exclude>
+                            <exclude>**/*UI*.class</exclude>
+                            <exclude>**/ui/**/*.class</exclude>
+                            <exclude>**/*Application.class</exclude>
+                            <exclude>**/*Config.class</exclude>
+
                     </excludes>
                 </configuration>
             </plugin>

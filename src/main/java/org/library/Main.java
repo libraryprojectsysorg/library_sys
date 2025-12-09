@@ -1,8 +1,9 @@
-/*package org.library;
+package org.library;
 
 import org.library.Domain.*;
 import org.library.Service.Strategy.*;
 import org.library.Service.Strategy.fines.FineCalculator;
+import org.library.ui.AdminUI;
 
 import java.io.PrintStream;
 import java.io.UnsupportedEncodingException;
@@ -29,6 +30,17 @@ public class Main {
         BookCDService bookCDService = new BookCDService();
         AuthAdmin authAdmin = new AuthAdmin(borrowService, reminderService, fineCalculator, bookCDService);
 
+        // ======== Admin UI ========
+        AdminUI authUI = new AdminUI(
+                authAdmin,
+                scanner,
+                bookCDService,
+                borrowService,
+                reminderService,
+                fineCalculator
+        );
+
+
         System.out.println("=== Library Management System ===");
 
         boolean exitProgram = false;
@@ -48,6 +60,10 @@ public class Main {
 
                     if (authAdmin.login(email, password)) {
                         loggedInEmail = email;
+
+
+                        authUI.updateRole(authAdmin);
+
                         System.out.println(authAdmin.getErrorMessage());
                     } else {
                         System.out.println("خطأ: البريد الإلكتروني أو كلمة المرور غير صحيحة.");
@@ -71,15 +87,23 @@ public class Main {
 
             if (authAdmin.isSuperAdmin()) {
                 System.out.println("\nتم تسجيل الدخول كـ **مدير أعلى (SUPER ADMIN)**.");
-                authAdmin.showAdminMenu(scanner);
+                authUI.showAdminMenu();
+
+                loggedInEmail = null;
+
             } else if (authAdmin.isLoggedInAdmin()) {
                 System.out.println("\nتم تسجيل الدخول كـ **مدير عادي (ADMIN)**.");
-                authAdmin.showAdminMenu(scanner);
+                authUI.showAdminMenu();
+                authUI.logout();
+                loggedInEmail = null;
+
             } else if (authAdmin.isLoggedInUser()) {
                 User user = findUserByEmail(loggedInEmail);
                 if (user != null) {
                     System.out.println("\nتم تسجيل الدخول كـ **مستخدم عادي**.");
                     userMenu(scanner, borrowService, fineCalculator, bookCDService, user);
+                    authUI.logout();
+                    loggedInEmail = null;
                 } else {
                     System.out.println("خطأ: لم يتم العثور على بيانات المستخدم.");
                 }
@@ -295,4 +319,4 @@ public class Main {
 
         }
     }
-}*/
+}

@@ -9,6 +9,7 @@ import java.util.List;
 public class BorrowService {
 
     private Clock clock = Clock.systemDefaultZone();
+    @SuppressWarnings("unused")
     private final EmailNotifier emailNotifier;
     private final LoanFileHandler loanFileHandler;
 
