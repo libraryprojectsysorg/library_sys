@@ -1,4 +1,4 @@
-package org.library.ui;
+/*package org.library.ui;
 
 import org.library.Domain.*;
 import org.library.Service.Strategy.*;
@@ -341,4 +341,4 @@ public class AdminUI {
         else loggedInRole = Role.USER;
         isLoggedIn = true;
     }
-}
+}*/
