@@ -205,4 +205,37 @@ class UserFileHandlerTest {
             mocked.verify(UserFileHandler::loadAllUsers);
         }
     }
+    @Test
+    void coverAllRemainingBranches() {
+        UserFileHandler.saveUser("admin@lib.com", "123", "ADMIN", "A555", "Admin");
+        assertFalse(UserFileHandler.removeUserById("A555", "ADMIN"));
+
+        User fake = new User("X000", "Fake", "fake@none.com", "USER");
+        assertFalse(UserFileHandler.updateUser(fake));
+
+        UserFileHandler.setUsersFile("/invalid/path/cantwrite.txt");
+        assertFalse(UserFileHandler.updateUser(fake));
+    }
+
+    @Test
+    void removeUserById_ShouldNotAllowAdminToDeleteAnotherAdmin() {
+        UserFileHandler.saveUser("admin1@lib.com", "pass", "ADMIN", "A001", "Admin One");
+        UserFileHandler.saveUser("admin2@lib.com", "pass", "ADMIN", "A002", "Admin Two");
+
+        boolean removed = UserFileHandler.removeUserById("A001", "ADMIN");
+
+        assertFalse(removed);
+        assertEquals(2, UserFileHandler.loadAllUsers().size());
+    }
+
+
+    @Test
+    void updateUser_ShouldReturnFalse_WhenFileCannotBeWritten() {
+        UserFileHandler.saveUser("test@lib.com", "pass", "USER", "U001", "Test");
+        User user = UserFileHandler.getUserByCredentials("test@lib.com", "pass");
+
+        UserFileHandler.setUsersFile("/invalid/path/no/permission/users.txt");
+
+        assertFalse(UserFileHandler.updateUser(user));
+    }
 }

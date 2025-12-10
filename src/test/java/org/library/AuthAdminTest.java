@@ -344,7 +344,7 @@ class AuthAdminTest {
 
     @Test
     void login_ShouldHandleAllRoleCases_IncludingDefault() throws Exception {
-        // 1. ADMIN
+
         try (MockedStatic<UserFileHandler> m = Mockito.mockStatic(UserFileHandler.class)) {
             User u = mock(User.class);
             when(u.getRole()).thenReturn("admin");
@@ -353,7 +353,7 @@ class AuthAdminTest {
             assertTrue(authAdmin.isLoggedInAdmin());
         }
 
-        // 2. USER
+
         try (MockedStatic<UserFileHandler> m = Mockito.mockStatic(UserFileHandler.class)) {
             User u = mock(User.class);
             when(u.getRole()).thenReturn("User");
@@ -362,7 +362,7 @@ class AuthAdminTest {
             assertTrue(authAdmin.isLoggedInUser());
         }
 
-        // 3. Unknown role → default case
+
         try (MockedStatic<UserFileHandler> m = Mockito.mockStatic(UserFileHandler.class)) {
             User u = mock(User.class);
             when(u.getRole()).thenReturn("HACKER");
@@ -377,13 +377,13 @@ class AuthAdminTest {
 
     @Test
     void loadUsers_ShouldClearAndReloadFromFileHandler() throws Exception {
-        // نضيف يوزر وهمي في الـ list
+
         Field usersField = AuthAdmin.class.getDeclaredField("users");
         usersField.setAccessible(true);
         List<User> usersList = (List<User>) usersField.get(authAdmin);
         usersList.add(mock(User.class)); // عشان نتحقق إن clear اشتغلت
 
-        // نموك الـ loadAllUsers
+
         List<User> newUsers = List.of(mock(User.class), mock(User.class));
         try (MockedStatic<UserFileHandler> m = mockStatic(UserFileHandler.class)) {
             m.when(UserFileHandler::loadAllUsers).thenReturn(newUsers);
@@ -414,7 +414,7 @@ class AuthAdminTest {
 
     @Test
     void logout_ShouldResetAllFields() throws Exception {
-        // نعمل login
+
         try (MockedStatic<UserFileHandler> m = mockStatic(UserFileHandler.class)) {
             User u = mock(User.class);
             when(u.getRole()).thenReturn("ADMIN");
@@ -432,6 +432,51 @@ class AuthAdminTest {
         assertFalse((Boolean) f1.get(authAdmin));
         assertNull(f2.get(authAdmin));
         assertNull(f3.get(authAdmin));
+    }
+
+    @Test
+    void getErrorMessage_ShouldReturnInvalidCredentials_WhenNotLoggedIn() throws Exception {
+        setLoggedIn(false);
+
+        String message = authAdmin.getErrorMessage();
+
+        assertEquals("Invalid credentials - please try again.", message);
+    }
+
+    @Test
+    void getErrorMessage_ShouldReturnSuccessMessage_WhenLoggedIn() throws Exception {
+        setLoggedIn(true);
+
+        String message = authAdmin.getErrorMessage();
+
+        assertEquals("Login successful", message);
+    }
+
+    @Test
+    void borrowMedia_ShouldWrapSpecificExceptions_AndThrowRuntimeException() {
+        Media media = mock(Media.class);
+        User user = mock(User.class);
+
+
+        try {
+            doThrow(new MediaNotAvailableException("Media not available"))
+                    .when(borrowService)
+                    .borrowMedia(media, user);
+        } catch (MediaNotAvailableException e) {
+            throw new RuntimeException(e);
+        } catch (UserCannotBorrowException e) {
+            throw new RuntimeException(e);
+        } catch (MediaAlreadyBorrowedException e) {
+            throw new RuntimeException(e);
+        }
+
+
+        RuntimeException thrown = assertThrows(RuntimeException.class, () -> {
+            authAdmin.borrowMedia(media, user);
+        });
+
+
+        assertInstanceOf(MediaNotAvailableException.class, thrown.getCause());
     }
     private void loginAsSuperAdmin() {
         try (MockedStatic<UserFileHandler> mocked = Mockito.mockStatic(UserFileHandler.class)) {
@@ -462,4 +507,10 @@ class AuthAdminTest {
             // Ignored because this helper is used only in controlled test scenarios
         }
     }
+    private void setLoggedIn(boolean value) throws Exception {
+        Field field = AuthAdmin.class.getDeclaredField("isLoggedIn");
+        field.setAccessible(true);
+        field.set(authAdmin, value);
+    }
+
 }
