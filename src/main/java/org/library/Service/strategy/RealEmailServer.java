@@ -4,7 +4,8 @@ import io.github.cdimascio.dotenv.Dotenv;
 import jakarta.mail.*;
 import jakarta.mail.internet.*;
 import org.library.domain.EmailMessage;
-
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import java.util.Properties;
 
 /**
@@ -14,6 +15,8 @@ import java.util.Properties;
  * @version 2.0
  */
 public class RealEmailServer implements EmailServer {
+
+    private static final Logger logger = Logger.getLogger(RealEmailServer.class.getName());
 
     private final String adminEmail;
     private final String adminPass;
@@ -47,9 +50,9 @@ public class RealEmailServer implements EmailServer {
             message.setText(email.getContent());
 
             Transport.send(message);
-            System.out.println("✅ تم إرسال الإيميل إلى: " + email.getRecipientEmail());
+            logger.log(Level.INFO, "✅ Email sent successfully to: " + email.getRecipientEmail());
         } catch (Exception e) {
-            System.out.println("❌ فشل إرسال الإيميل: " + e.getMessage());
+            logger.log(Level.SEVERE, "❌ Failed to send email: " + e.getMessage(), e);
         }
     }
 }
