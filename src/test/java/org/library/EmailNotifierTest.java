@@ -2,10 +2,10 @@ package org.library;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.library.Domain.EmailMessage;
-import org.library.Domain.User;
-import org.library.Service.Strategy.EmailNotifier;
-import org.library.Service.Strategy.EmailServer;
+import org.library.domain.EmailMessage;
+import org.library.domain.User;
+import org.library.Service.strategy.EmailNotifier;
+import org.library.Service.strategy.EmailServer;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;

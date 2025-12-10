@@ -2,8 +2,8 @@ package org.library;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.library.Domain.OverdueReport;
-import org.library.Domain.User;
+import org.library.domain.OverdueReport;
+import org.library.domain.User;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.mock;
@@ -45,8 +45,8 @@ class OverdueReportTest {
 
         assertNotEquals(report1, report3, "Should not be equal if count differs");
         assertNotEquals(report1, report4, "Should not be equal if user differs");
-        assertNotEquals(report1, null, "Should not be equal to null");
-        assertNotEquals(report1, "Some String", "Should not be equal to different class type");
+        assertNotEquals(null, report1, "Should not be equal to null");
+        assertNotEquals( "Some String",report1,  "Should not be equal to different class type");
     }
 
     @Test

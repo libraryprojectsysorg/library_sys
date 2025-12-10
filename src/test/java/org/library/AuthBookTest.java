@@ -1,9 +1,9 @@
 package org.library;
 
 import org.junit.jupiter.api.*;
-import org.library.Domain.Book;
-import org.library.Service.Strategy.BookFileHandler;
-import org.library.Service.Strategy.BookCDService;
+import org.library.domain.Book;
+import org.library.Service.strategy.BookFileHandler;
+import org.library.Service.strategy.BookCDService;
 
 import java.io.File;
 import java.util.List;
@@ -11,7 +11,7 @@ import java.util.List;
 import static org.junit.jupiter.api.Assertions.*;
 
 @TestInstance(TestInstance.Lifecycle.PER_CLASS)
-public class AuthBookTest {
+ class AuthBookTest {
 
     private BookCDService bookCDService;
     private static final String TEST_FILE = "test-books.txt";

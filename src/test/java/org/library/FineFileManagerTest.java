@@ -1,10 +1,10 @@
 package org.library;
 
 import org.junit.jupiter.api.*;
-import org.library.Domain.Fine;
-import org.library.Domain.User;
-import org.library.Service.Strategy.FineFileManager;
-import org.library.Service.Strategy.UserFileHandler;
+import org.library.domain.Fine;
+import org.library.domain.User;
+import org.library.Service.strategy.FineFileManager;
+import org.library.Service.strategy.UserFileHandler;
 
 import java.io.*;
 import java.lang.reflect.Field;

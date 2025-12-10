@@ -4,8 +4,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import org.library.Domain.Media;
-import org.library.Service.Strategy.fines.FineStrategy;
+import org.library.domain.Media;
+import org.library.Service.strategy.fines.FineStrategy;
 
 import static org.junit.jupiter.api.Assertions.*;
 

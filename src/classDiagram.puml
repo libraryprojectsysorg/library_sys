@@ -1,0 +1,85 @@
+@startuml
+
+
+skinparam classAttributeIconSize 0
+skinparam linetype ortho
+
+package "domain" {
+    class User {
+        - String id
+        - String name
+        - String email
+    }
+
+    class Media {
+        - String title
+        - String author
+        - String isbn
+    }
+
+    class Book {
+        - int pageCount
+    }
+
+    class CD {
+        - String duration
+    }
+
+    class Loan {
+        - String loanId
+        - LocalDate borrowDate
+        - LocalDate dueDate
+    }
+
+    class Fine {
+        - double amount
+        - boolean isPaid
+    }
+}
+
+package "Service.strategy" {
+    class LoanFileHandler {
+        + List<Loan> loadAllLoans()
+        + void saveLoan(Loan loan)
+    }
+
+    class UserFileHandler {
+        + List<User> loadAllUsers()
+    }
+
+    class BookCDService {
+        + List<Media> search(String query)
+    }
+
+    class BorrowService {
+        + boolean borrowMedia(Media media, User user)
+    }
+
+    class ReminderService {
+        + void checkOverdueLoans()
+    }
+
+    interface Observer {
+        + void update(String message)
+    }
+
+    class EmailNotifier implements Observer {
+        + void update(String message)
+    }
+}
+
+Media <|-- Book
+Media <|-- CD
+
+
+Loan --> User : borrows
+Loan --> Media : contains
+Loan "1" *-- "0..1" Fine : generates
+
+
+BorrowService ..> LoanFileHandler : uses
+BorrowService ..> UserFileHandler : uses
+ReminderService ..> LoanFileHandler : checks
+BookCDService ..> Media : manages
+
+@enduml

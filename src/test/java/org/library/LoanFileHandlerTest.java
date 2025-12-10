@@ -3,13 +3,13 @@ package org.library;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.library.Domain.Book;
-import org.library.Domain.Loan;
-import org.library.Domain.User;
+import org.library.domain.Book;
+import org.library.domain.Loan;
+import org.library.domain.User;
 
-import org.library.Service.Strategy.BookFileHandler;
-import org.library.Service.Strategy.LoanFileHandler;
-import org.library.Service.Strategy.UserFileHandler;
+import org.library.Service.strategy.BookFileHandler;
+import org.library.Service.strategy.LoanFileHandler;
+import org.library.Service.strategy.UserFileHandler;
 
 
 import java.io.File;
@@ -142,7 +142,7 @@ class LoanFileHandlerTest {
     }
 
     @Test
-    void loadAllLoans_ShouldHandleIOException_Gracefully() throws Exception {
+    void loadAllLoans_ShouldHandleIOException_Gracefully() {
 
         LoanFileHandler.setLoansFile("/invalid/path/loans.txt");
 

@@ -2,7 +2,7 @@ package org.library;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
-import org.library.Domain.EmailMessage;
+import org.library.domain.EmailMessage;
 
 import static org.junit.jupiter.api.Assertions.*;
 

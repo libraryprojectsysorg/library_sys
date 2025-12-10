@@ -2,8 +2,8 @@ package org.library;
 
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.io.TempDir;
-import org.library.Domain.User;
-import org.library.Service.Strategy.UserFileHandler;
+import org.library.domain.User;
+import org.library.Service.strategy.UserFileHandler;
 import org.mockito.MockedStatic;
 
 import java.nio.file.Path;
@@ -25,7 +25,7 @@ class UserFileHandlerTest {
     void setUp() {
         testFile = tempDir.resolve("users_test.txt").toString();
         UserFileHandler.setUsersFile(testFile);
-        // نضمن إن الملف فاضي
+
         new java.io.File(testFile).delete();
     }
 
@@ -202,7 +202,7 @@ class UserFileHandlerTest {
             assertTrue(UserFileHandler.loadAllUsers().isEmpty());
 
 
-            mocked.verify(() -> UserFileHandler.loadAllUsers());
+            mocked.verify(UserFileHandler::loadAllUsers);
         }
     }
 }

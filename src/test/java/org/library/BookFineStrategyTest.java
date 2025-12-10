@@ -1,7 +1,7 @@
 package org.library;
 
 import org.junit.jupiter.api.Test;
-import org.library.Service.Strategy.fines.BookFineStrategy;
+import org.library.Service.strategy.fines.BookFineStrategy;
 
 import static org.junit.jupiter.api.Assertions.*;
 

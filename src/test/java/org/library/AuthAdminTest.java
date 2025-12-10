@@ -2,9 +2,12 @@ package org.library;
 
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.library.Domain.*;
-import org.library.Service.Strategy.*;
-import org.library.Service.Strategy.fines.FineCalculator;
+import org.library.Service.strategy.*;
+import org.library.domain.*;
+import org.library.Service.strategy.fines.FineCalculator;
+import org.library.exception.MediaAlreadyBorrowedException;
+import org.library.exception.MediaNotAvailableException;
+import org.library.exception.UserCannotBorrowException;
 import org.mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 
@@ -29,7 +32,7 @@ class AuthAdminTest {
     void setUp() throws Exception {
         authAdmin = new AuthAdmin(borrowService, reminderService, fineCalculator, bookCDService);
 
-        // نفرغ الـ users list ونحقن قايمة جديدة عشان نتحكم فيها
+
         Field usersField = AuthAdmin.class.getDeclaredField("users");
         usersField.setAccessible(true);
         usersField.set(authAdmin, new ArrayList<User>());
@@ -37,8 +40,8 @@ class AuthAdminTest {
 
     @Test
     void superAdminShouldLoginSuccessfully() {
-        // نعمل mock للـ static method بطريقة بسيطة جدًا
-        try (MockedStatic<UserFileHandler> mocked = Mockito.mockStatic(UserFileHandler.class)) {
+
+        try (MockedStatic<UserFileHandler> mocked = mockStatic(UserFileHandler.class)) {
             User superAdmin = new User("SA001", "Library Super Admin", "default_super@library.com");
             setPrivateField(superAdmin, "role", "SUPER_ADMIN");
 
@@ -142,7 +145,7 @@ class AuthAdminTest {
     }
 
     @Test
-    void borrowMediaShouldSucceed() {
+    void borrowMediaShouldSucceed() throws MediaNotAvailableException, UserCannotBorrowException, MediaAlreadyBorrowedException {
         loginAsSuperAdmin();
         Media media = mock(Media.class);
         User user = mock(User.class);
@@ -212,7 +215,7 @@ class AuthAdminTest {
     }
 
     @Test
-    void borrowMedia_ShouldReturnTrue_OnSuccess() {
+    void borrowMedia_ShouldReturnTrue_OnSuccess() throws MediaNotAvailableException, UserCannotBorrowException, MediaAlreadyBorrowedException {
         Media media = mock(Media.class);
         User user = mock(User.class);
         Loan loan = mock(Loan.class);
@@ -223,7 +226,7 @@ class AuthAdminTest {
     }
 
     @Test
-    void borrowMedia_ShouldReturnFalse_OnException() {
+    void borrowMedia_ShouldReturnFalse_OnException() throws MediaNotAvailableException, UserCannotBorrowException, MediaAlreadyBorrowedException {
         Media media = mock(Media.class);
         User user = mock(User.class);
 
@@ -322,7 +325,7 @@ class AuthAdminTest {
 
 
     @Test
-    void borrowMedia_ShouldReturnTrue_WhenBorrowServiceReturnsLoan() {
+    void borrowMedia_ShouldReturnTrue_WhenBorrowServiceReturnsLoan() throws MediaNotAvailableException, UserCannotBorrowException, MediaAlreadyBorrowedException {
         Media media = mock(Media.class);
         User user = mock(User.class);
         when(borrowService.borrowMedia(media, user)).thenReturn(mock(Loan.class));
@@ -445,7 +448,9 @@ class AuthAdminTest {
             f.setAccessible(true);
             List<User> list = (List<User>) f.get(authAdmin);
             list.add(user);
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+            // Ignored because this helper is used only in controlled test scenarios
+        }
     }
 
     private void setPrivateField(Object obj, String fieldName, Object value) {
@@ -453,6 +458,8 @@ class AuthAdminTest {
             Field f = obj.getClass().getDeclaredField(fieldName);
             f.setAccessible(true);
             f.set(obj, value);
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) {
+            // Ignored because this helper is used only in controlled test scenarios
+        }
     }
 }
