@@ -1,8 +1,11 @@
 /*package org.library;
 
-import org.library.Domain.*;
-import org.library.Service.Strategy.*;
-import org.library.Service.Strategy.fines.FineCalculator;
+import org.library.domain.*;
+import org.library.Service.strategy.*;
+import org.library.Service.strategy.fines.FineCalculator;
+import org.library.exception.MediaAlreadyBorrowedException;
+import org.library.exception.MediaNotAvailableException;
+import org.library.exception.UserCannotBorrowException;
 import org.library.ui.AdminUI;
 
 import java.io.PrintStream;
@@ -154,14 +157,31 @@ public class Main {
         }
 
         String otp = String.format("%06d", new java.util.Random().nextInt(999999));
-        new EmailNotifier(new RealEmailServer()).notify(user,
-                "رمز التحقق لإعادة تعيين كلمة المرور: " + otp);
-        System.out.println("✅ تم إرسال رمز التحقق إلى بريدك الإلكتروني.");
 
-        System.out.print("أدخل رمز التحقق: ");
-        String enteredOtp = scanner.nextLine().trim();
+        // try-catch للإرسال: وقف لو فشل
+        try {
+            new EmailNotifier(new RealEmailServer()).notify(user,
+                    "رمز التحقق لإعادة تعيين كلمة المرور: " + otp);
+            System.out.println("✅ تم إرسال رمز التحقق إلى بريدك الإلكتروني. تحقق من السبام إذا لم يصل.");
+        } catch (RuntimeException e) {
+            System.out.println("❌ فشل إرسال الرمز: " + e.getMessage() + ". تحقق من إعدادات Gmail (App Password) أو جرب لاحقًا.");
+            return;
+        }
+
+
+        int attempts = 3;
+        String enteredOtp;
+        do {
+            System.out.print("/nأدخل رمز التحقق (" + attempts + " محاولات متبقية): ");
+            enteredOtp = scanner.nextLine().trim();
+            attempts--;
+            if (!enteredOtp.equals(otp)) {
+                System.out.println("❌ الرمز غير صحيح. جرب مرة أخرى.");
+            }
+        } while (!enteredOtp.equals(otp) && attempts > 0);
+
         if (!enteredOtp.equals(otp)) {
-            System.out.println("❌ الرمز غير صحيح.");
+            System.out.println("❌ نفدت المحاولات. جرب مرة أخرى لاحقًا.");
             return;
         }
 
@@ -175,10 +195,15 @@ public class Main {
             return;
         }
 
+
+
         user.setPassword(newPassword);
         UserFileHandler.updateUser(user);
         System.out.println("✅ تم تحديث كلمة المرور بنجاح.");
     }
+
+
+
 
     private static void userMenu(Scanner scanner, BorrowService borrowService, FineCalculator fineCalculator, BookCDService bookCDService, User user) {
         while (true) {
@@ -212,6 +237,12 @@ public class Main {
                         System.out.println("✅ تم استعارة كتاب: " + bookToBorrow.getTitle() + " بنجاح!");
                     } catch (RuntimeException e) {
                         System.out.println("❌ فشل الاستعارة: " + e.getMessage());
+                    } catch (MediaNotAvailableException e) {
+                        throw new RuntimeException(e);
+                    } catch (UserCannotBorrowException e) {
+                        throw new RuntimeException(e);
+                    } catch (MediaAlreadyBorrowedException e) {
+                        throw new RuntimeException(e);
                     }
                 }
 
@@ -252,10 +283,18 @@ public class Main {
                     CD cdToBorrow = matchingCDs.get(0);
 
                     try {
-                        borrowService.borrowMedia(cdToBorrow, user);
+                        try {
+                            borrowService.borrowMedia(cdToBorrow, user);
+                        } catch (UserCannotBorrowException e) {
+                            throw new RuntimeException(e);
+                        } catch (MediaAlreadyBorrowedException e) {
+                            throw new RuntimeException(e);
+                        }
                         System.out.println("✅ تم استعارة CD: " + cdToBorrow.getTitle() + " بنجاح!");
                     } catch (RuntimeException e) {
                         System.out.println("❌ فشل الاستعارة: " + e.getMessage());
+                    } catch (MediaNotAvailableException e) {
+                        throw new RuntimeException(e);
                     }
                 }
 

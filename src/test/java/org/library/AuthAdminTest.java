@@ -165,10 +165,10 @@ class AuthAdminTest {
         User user = mock(User.class);
         when(user.getId()).thenReturn("TEST123");
 
-        // نحقن اليوزر في الـ list
+
         Field field = AuthAdmin.class.getDeclaredField("users");
         field.setAccessible(true);
-        @SuppressWarnings("unchecked")
+
         List<User> list = (List<User>) field.get(authAdmin);
         list.add(user);
 
@@ -452,7 +452,7 @@ class AuthAdminTest {
         assertEquals("Login successful", message);
     }
 
-    @Test
+   @Test
     void borrowMedia_ShouldWrapSpecificExceptions_AndThrowRuntimeException() {
         Media media = mock(Media.class);
         User user = mock(User.class);

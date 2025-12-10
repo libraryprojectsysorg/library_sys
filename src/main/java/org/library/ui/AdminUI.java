@@ -1,8 +1,11 @@
 /*package org.library.ui;
 
-import org.library.Domain.*;
-import org.library.Service.Strategy.*;
-import org.library.Service.Strategy.fines.FineCalculator;
+import org.library.domain.*;
+import org.library.Service.strategy.*;
+import org.library.Service.strategy.fines.FineCalculator;
+import org.library.exception.MediaAlreadyBorrowedException;
+import org.library.exception.MediaNotAvailableException;
+import org.library.exception.UserCannotBorrowException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -221,7 +224,17 @@ public class AdminUI {
         User user = findUserById(userId);
         if (user == null) { System.out.println("❌ User not found."); return; }
 
-        try { borrowService.borrowMedia(book, user); System.out.println("✅ Borrowed successfully: " + user.getName()); }
+        try {
+            try {
+                borrowService.borrowMedia(book, user);
+            } catch (MediaNotAvailableException e) {
+                throw new RuntimeException(e);
+            } catch (UserCannotBorrowException e) {
+                throw new RuntimeException(e);
+            } catch (MediaAlreadyBorrowedException e) {
+                throw new RuntimeException(e);
+            }
+            System.out.println("✅ Borrowed successfully: " + user.getName()); }
         catch (RuntimeException e) { System.out.println("❌ Failed: " + e.getMessage()); }
     }
 
@@ -248,7 +261,17 @@ public class AdminUI {
         User user = findUserById(userId);
         if (user == null) { System.out.println("❌ User not found."); return; }
 
-        try { borrowService.borrowMedia(cd, user); System.out.println("✅ Borrowed CD: " + user.getName()); }
+        try {
+            try {
+                borrowService.borrowMedia(cd, user);
+            } catch (MediaNotAvailableException e) {
+                throw new RuntimeException(e);
+            } catch (UserCannotBorrowException e) {
+                throw new RuntimeException(e);
+            } catch (MediaAlreadyBorrowedException e) {
+                throw new RuntimeException(e);
+            }
+            System.out.println("✅ Borrowed CD: " + user.getName()); }
         catch (RuntimeException e) { System.out.println("❌ Failed: " + e.getMessage()); }
     }
 
